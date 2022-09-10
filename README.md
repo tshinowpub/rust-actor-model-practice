@@ -1,2 +1,2 @@
-# rust-riker-practice
-practice rust riker-rs
+# rust-actor-model-practice
+practice rust actor model
