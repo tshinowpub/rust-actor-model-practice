@@ -13,9 +13,14 @@ tonic = "0.8.1"
 [workspace]
 members = [
     "message",
-    "web"
+    "web",
+    "write-grpc"
 ]
 
 [[bin]]
 name = "web"
 path = "web/src/main.rs"
+
+[[bin]]
+name = "write-grpc"
+path = "write-grpc/src/main.rs"
