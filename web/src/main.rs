@@ -1,4 +1,4 @@
-use actix_web::{get, web, App, HttpServer, Responder, HttpResponse};
+use actix_web::{get, web, App, HttpServer, Responder};
 
 mod controllers;
 
