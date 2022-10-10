@@ -7,11 +7,6 @@ async fn greet(name: web::Path<String>) -> impl Responder {
     format!("Hello {name}!")
 }
 
-#[get("/health")]
-async fn health() -> HttpResponse {
-    HttpResponse::Ok().body("Ok!")
-}
-
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     HttpServer::new(|| {
