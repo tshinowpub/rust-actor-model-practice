@@ -1,19 +1,10 @@
 [package]
-name = "rust-actor-model-practice"
+name = "read-http-api"
 version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-actix = "0.13"
 actix-web = "4.2.1"
-tonic = "0.8.1"
-
-[workspace]
-members = [
-    "message",
-    "web",
-    "read-http-api",
-    "write-grpc"
-]
+serde = { version = "1.0", features = ["derive"] }
