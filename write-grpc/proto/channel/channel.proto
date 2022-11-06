@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+package channel;
+
 service ChannelService {
   rpc GetChannel(GetChannelRequest) returns (Channel) {}
   rpc CreateChannel(CreateChannelRequest) returns (Channel) {}
