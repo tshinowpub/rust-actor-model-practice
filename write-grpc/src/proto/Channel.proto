@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+service ChannelService {
+  rpc GetChannel(GetChannelRequest) returns (Channel) {}
+  rpc CreateChannel(CreateChannelRequest) returns (Channel) {}
+}
+
+message CreateChannelRequest {
+  string name = 1;
+}
+
+message GetChannelRequest {
+  string id = 1;
+}
+
+message Channel {
+  string id = 1;
+  string name = 2;
+}
