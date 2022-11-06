@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+service MessageService {
+  rpc addMessage (MessageRequest) returns (Message);
+}
+
+message MessageRequest {
+  string value = 1;
+}
+
+message Message {
+  string message = 1;
+}
