@@ -19,7 +19,7 @@ impl Message for MyMessage {
         println!("Got a request from {:?}", request.remote_addr());
 
         let reply = message::MessageReply {
-            message: format!("Hello {}!", request.into_inner().value),
+            message: format!("Hello {}!", request.into_inner().message),
         };
         Ok(Response::new(reply))
     }
