@@ -1,34 +1,19 @@
-use tonic::{transport::Server, Request, Response, Status};
+use tonic::transport::Server;
 
-use crate::message::message_server::{Message, MessageServer};
-use message::{MessageReply, MessageRequest};
+mod adapter;
 
-pub mod message {
-    tonic::include_proto!("message");
-}
+use crate::adapter::controllers::add_message_controller::message::message_server::MessageServer;
+use adapter::controllers::add_message_controller::AddMessage;
 
-#[derive(Default)]
-pub struct MyMessage {}
-
-#[tonic::async_trait]
-impl Message for MyMessage {
-    async fn add_message(
-        &self,
-        request: Request<MessageRequest>,
-    ) -> Result<Response<MessageReply>, Status> {
-        println!("Got a request from {:?}", request.remote_addr());
-
-        let reply = message::MessageReply {
-            message: format!("Hello {}!", request.into_inner().message),
-        };
-        Ok(Response::new(reply))
-    }
-}
-
+/**
+ * see https://qiita.com/ryuma017/items/1f31f5441ed5df80f1cc
+ * https://zenn.dev/magurotuna/books/tokio-tutorial-ja/viewer/hello_tokio
+ */
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let addr = "[::1]:50051".parse().unwrap();
-    let message = MyMessage::default();
+
+    let message = AddMessage::default();
 
     println!("MessageServer listening on {}", addr);
 
