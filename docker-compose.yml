@@ -1,0 +1,19 @@
+# https://moznion.hatenadiary.com/entry/2017/12/17/224043
+version: "3.9"
+
+services:
+  dynamodb:
+    container_name: dynamodb
+    image: amazon/dynamodb-local:1.20.0
+    ports:
+      - "8000:8000"
+
+  dynamodb-admin:
+    container_name: dynamodb-admin
+    image: aaronshaf/dynamodb-admin:latest
+    environment:
+      - DYNAMO_ENDPOINT=dynamodb:8000
+    ports:
+      - "8001:8001"
+    depends_on:
+      - dynamodb
