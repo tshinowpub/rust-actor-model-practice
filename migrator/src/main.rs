@@ -1,6 +1,10 @@
 use std::env;
 use std::process::exit;
 
+mod executor;
+
+use crate::executor::Executor;
+
 fn main() {
     let execute_path: String;
     match env::current_exe() {
@@ -15,13 +19,13 @@ fn main() {
 
     let arguments = extract_user_arguments(env::args().collect(), execute_path);
     match arguments.first() {
+        Some(command)    => {
+            Executor::execute(command);
+        }
         None => {
             println!("Use --help.");
 
             exit(1);
-        }
-        Some(command)    => {
-            println!("{}", command);
         }
     }
 
