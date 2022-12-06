@@ -2,6 +2,7 @@ use std::env;
 use std::process::exit;
 
 mod executor;
+mod commands;
 
 use crate::executor::Executor;
 
