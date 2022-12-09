@@ -1,4 +1,4 @@
-use crate::commands::command::Command;
+use crate::command::Command;
 
 pub struct Migrate {}
 

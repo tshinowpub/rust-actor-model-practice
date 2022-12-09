@@ -3,6 +3,7 @@ use std::process::exit;
 
 mod executor;
 mod commands;
+pub mod command;
 
 use crate::executor::Executor;
 
@@ -18,7 +19,12 @@ fn main() {
         },
     };
 
-    let arguments = extract_user_arguments(env::args().collect(), execute_path);
+    let arguments = extract_user_arguments(env::args().collect(), execute_path.clone());
+    let options = extract_options(env::args().collect(), execute_path.clone());
+
+
+    dbg!(&arguments);
+
     match arguments.first() {
         Some(command)    => {
             Executor::execute(command);
@@ -37,13 +43,31 @@ fn extract_user_arguments(arguments: Vec<String>, execute_path: String) -> Vec<S
     let user_arguments: Vec<String> = arguments
         .iter()
         .filter_map(|s| {
-            if s.to_string() != execute_path {
-                return s.parse::<String>().ok()
+            return match s.to_string() {
+                s if (s.to_string() != execute_path && !is_option(s.to_string())) => s.parse::<String>().ok(),
+                _ => None
             }
-
-            None
         })
         .collect();
 
     user_arguments.clone()
+}
+
+fn extract_options(arguments: Vec<String>, execute_path: String) -> Vec<String> {
+    return arguments
+        .iter()
+        .filter_map(|s| {
+            return match s.to_string() {
+                s if (s.to_string() != execute_path && is_option(s.to_string())) => s.parse::<String>().ok(),
+                _ => None
+            }
+        })
+        .collect();
+}
+
+fn is_option(pattern: String) -> bool {
+    return match pattern.find("-") {
+        Some(found) if found == 0 => true,
+        _ => false
+    }
 }
