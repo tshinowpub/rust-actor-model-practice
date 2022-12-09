@@ -6,11 +6,11 @@ use crate::commands::migrate::Migrate;
 pub struct Executor {}
 
 impl Executor {
-    pub fn execute(command_name: &String) {
+    pub fn execute(command_name: &String, arguments: Vec<String>, options: Vec<String>) {
         let result = Executor::resolve(command_name);
 
         match result {
-            Ok(ref command) => command.execute(),
+            Ok(ref command) => command.execute(arguments, options),
             Err(_) => println!("Command {} was not found.", command_name),
         }
     }

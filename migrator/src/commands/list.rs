@@ -9,7 +9,7 @@ impl List {
 }
 
 impl Command for List {
-    fn execute(&self) {
+    fn execute(&self, arguments: Vec<String>, options: Vec<String>) {
         println!("List!!!")
     }
 
