@@ -9,7 +9,7 @@ impl Migrate {
 }
 
 impl Command for Migrate {
-    fn execute(&self, arguments: Vec<String>, options: Vec<String>) {
+    fn execute(&self, arguments: &Vec<String>, options: &Vec<String>) {
         println!("Migrate!!!")
     }
 

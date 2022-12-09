@@ -6,7 +6,7 @@ use crate::commands::migrate::Migrate;
 pub struct Executor {}
 
 impl Executor {
-    pub fn execute(command_name: &String, arguments: Vec<String>, options: Vec<String>) {
+    pub fn execute(command_name: &String, arguments: &Vec<String>, options: &Vec<String>) {
         let result = Executor::resolve(command_name);
 
         match result {

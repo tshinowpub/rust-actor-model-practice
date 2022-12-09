@@ -22,9 +22,9 @@ fn main() {
     let arguments = extract_user_arguments(env::args().collect(), &execute_path);
     let options = extract_options(env::args().collect(), &execute_path);
 
-    match arguments.first() {
+    match arguments.clone().first() {
         Some(command)    => {
-            Executor::execute(command, arguments.clone(), options);
+            Executor::execute(command, &arguments, &options);
         }
         None => {
             println!("Use --help.");
