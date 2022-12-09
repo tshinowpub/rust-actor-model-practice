@@ -1,5 +1,6 @@
-use crate::commands::migrator_command::{List, Migrate};
-use crate::commands::migrator_command::Command;
+use crate::commands::list::List;
+use crate::commands::command::Command;
+use crate::commands::migrate::Migrate;
 
 #[derive(Default)]
 pub struct Executor {}
