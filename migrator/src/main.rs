@@ -1,11 +1,14 @@
 use std::env;
 use std::process::exit;
 
-mod executor;
 mod commands;
+mod executor;
+mod extractor;
 pub mod command;
 
 use crate::executor::Executor;
+use crate::extractor::argument_extractor::ArgumentExtractor;
+use crate::extractor::option_extractor::OptionExtractor;
 
 fn main() {
     let execute_path: String;
@@ -19,8 +22,8 @@ fn main() {
         },
     };
 
-    let arguments = extract_user_arguments(env::args().collect(), &execute_path);
-    let options = extract_options(env::args().collect(), &execute_path);
+    let arguments = ArgumentExtractor::extract(env::args().collect(), &execute_path);
+    let options = OptionExtractor::extract(env::args().collect(), &execute_path);
 
     match arguments.clone().first() {
         Some(command)    => {
@@ -34,37 +37,4 @@ fn main() {
     }
 
     exit(0);
-}
-
-fn extract_user_arguments(arguments: Vec<String>, execute_path: &String) -> Vec<String> {
-    let user_arguments: Vec<String> = arguments
-        .iter()
-        .filter_map(|s| {
-            return match s {
-                s if (s != execute_path && !is_option(s)) => s.parse::<String>().ok(),
-                _ => None
-            }
-        })
-        .collect();
-
-    user_arguments
-}
-
-fn extract_options(arguments: Vec<String>, execute_path: &String) -> Vec<String> {
-    return arguments
-        .iter()
-        .filter_map(|s| {
-            return match s {
-                s if (s != execute_path && is_option(s)) => s.parse::<String>().ok(),
-                _ => None
-            }
-        })
-        .collect();
-}
-
-fn is_option(pattern: &String) -> bool {
-    return match pattern.find("-") {
-        Some(found) if found == 0 => true,
-        _ => false
-    }
 }
