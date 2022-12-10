@@ -28,11 +28,14 @@ fn main() {
     let arguments = argument_extractor.extract(env::args().collect(), &execute_path);
     let options = option_extractor.extract(env::args().collect(), &execute_path);
 
-    match arguments.clone().first() {
-        Some(command)    => {
-            Executor::execute(command, &arguments, &options);
-        }
-        None => {
+    match arguments.split_first() {
+        Some((command, args)) if !args.is_empty() => {
+            Executor::execute(command, &args.to_vec(), &options);
+        },
+        Some((command, _)) => {
+            Executor::execute(command, &Vec::new(), &options);
+        },
+        _ => {
             println!("Use --help.");
 
             exit(1);
@@ -41,4 +44,3 @@ fn main() {
 
     exit(0);
 }
-
