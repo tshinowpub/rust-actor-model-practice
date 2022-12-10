@@ -3,7 +3,11 @@ use crate::extractor::option_detector::OptionDetector;
 pub struct ArgumentExtractor {}
 
 impl ArgumentExtractor {
-    pub fn extract(arguments: Vec<String>, execute_path: &String) -> Vec<String> {
+    pub fn new() -> Self {
+        Self {}
+    }
+
+    pub fn extract(&self, arguments: Vec<String>, execute_path: &String) -> Vec<String> {
         let user_arguments: Vec<String> = arguments
             .iter()
             .filter_map(|s| {

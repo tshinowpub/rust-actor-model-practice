@@ -22,8 +22,11 @@ fn main() {
         },
     };
 
-    let arguments = ArgumentExtractor::extract(env::args().collect(), &execute_path);
-    let options = OptionExtractor::extract(env::args().collect(), &execute_path);
+    let argument_extractor = ArgumentExtractor::new();
+    let option_extractor = OptionExtractor::new();
+
+    let arguments = argument_extractor.extract(env::args().collect(), &execute_path);
+    let options = option_extractor.extract(env::args().collect(), &execute_path);
 
     match arguments.clone().first() {
         Some(command)    => {
@@ -38,3 +41,4 @@ fn main() {
 
     exit(0);
 }
+
