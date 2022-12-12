@@ -4,13 +4,18 @@ use std::process::exit;
 mod commands;
 mod executor;
 mod extractor;
+mod clients;
+mod lexers;
+
 pub mod command;
 
 use crate::executor::Executor;
 use crate::extractor::argument_extractor::ArgumentExtractor;
 use crate::extractor::option_extractor::OptionExtractor;
+use crate::lexers::option_lexer::OptionLexer;
 
-fn main() {
+#[tokio::main]
+async fn main() {
     let execute_path: String;
     match env::current_exe() {
         Ok(exe_path) =>
@@ -24,16 +29,19 @@ fn main() {
 
     let argument_extractor = ArgumentExtractor::new();
     let option_extractor = OptionExtractor::new();
+    let lexer = OptionLexer::default();
 
     let arguments = argument_extractor.extract(env::args().collect(), &execute_path);
-    let options = option_extractor.extract(env::args().collect(), &execute_path);
+    let option_arguments = option_extractor.extract(env::args().collect(), &execute_path);
+
+    let options = lexer.parse(&option_arguments);
 
     match arguments.split_first() {
         Some((command, args)) if !args.is_empty() => {
-            Executor::execute(command, &args.to_vec(), &options);
+            Executor::execute(command, &args.to_vec(), &option_arguments).await;
         },
         Some((command, _)) => {
-            Executor::execute(command, &Vec::new(), &options);
+            Executor::execute(command, &Vec::new(), &option_arguments).await;
         },
         _ => {
             println!("Use --help.");
