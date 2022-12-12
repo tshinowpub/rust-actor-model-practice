@@ -1264,6 +1264,11 @@ version = "0.1.0"
 [[package]]
 name = "migrator"
 version = "0.1.0"
+dependencies = [
+ "aws-config",
+ "aws-sdk-dynamodb",
+ "tokio",
+]
 
 [[package]]
 name = "mime"
