@@ -4,12 +4,13 @@ use crate::clients::dynamodb_client::DynamodbClient;
 use crate::commands::list::List;
 use crate::command::Command;
 use crate::commands::migrate::Migrate;
+use crate::lexers::option_lexer::Options;
 
 #[derive(Default)]
 pub struct Executor {}
 
 impl Executor {
-    pub async fn execute(command_name: &String, arguments: &Vec<String>, options: &Vec<String>) {
+    pub async fn execute(command_name: &String, arguments: &Vec<String>, options: &Options) {
         let result = Executor::resolve(command_name);
 
         match result.await {

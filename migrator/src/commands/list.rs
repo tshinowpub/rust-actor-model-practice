@@ -1,4 +1,5 @@
 use crate::command::Command;
+use crate::lexers::option_lexer::Options;
 
 pub struct List {}
 
@@ -9,7 +10,7 @@ impl List {
 }
 
 impl Command for List {
-    fn execute(&self, arguments: &Vec<String>, options: &Vec<String>) {
+    fn execute(&self, arguments: &Vec<String>, options: &Options) {
         println!("List!!!")
     }
 

@@ -1,6 +1,7 @@
 use crate::command::Command;
 use crate::clients::dynamodb_client;
 use crate::clients::dynamodb_client::DynamodbClient;
+use crate::lexers::option_lexer::Options;
 
 const MIGRATE_PATH: &str = "./migrations";
 
@@ -17,7 +18,7 @@ impl Migrate {
 }
 
 impl Command for Migrate {
-    fn execute(&self, arguments: &Vec<String>, options: &Vec<String>) {
+    fn execute(&self, arguments: &Vec<String>, options: &Options) {
         println!("Migrate!!!");
 
 

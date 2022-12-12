@@ -38,10 +38,10 @@ async fn main() {
 
     match arguments.split_first() {
         Some((command, args)) if !args.is_empty() => {
-            Executor::execute(command, &args.to_vec(), &option_arguments).await;
+            Executor::execute(command, &args.to_vec(), &options).await;
         },
         Some((command, _)) => {
-            Executor::execute(command, &Vec::new(), &option_arguments).await;
+            Executor::execute(command, &Vec::new(), &options).await;
         },
         _ => {
             println!("Use --help.");
