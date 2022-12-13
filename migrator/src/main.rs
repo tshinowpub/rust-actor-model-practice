@@ -27,8 +27,8 @@ async fn main() {
         },
     };
 
-    let argument_extractor = ArgumentExtractor::new();
-    let option_extractor = OptionExtractor::new();
+    let argument_extractor = ArgumentExtractor::default();
+    let option_extractor = OptionExtractor::default();
     let lexer = OptionLexer::default();
 
     let arguments = argument_extractor.extract(env::args().collect(), &execute_path);

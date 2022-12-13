@@ -1,12 +1,9 @@
-pub struct OptionExtractor {}
-
 use crate::extractor::option_detector::OptionDetector;
 
-impl OptionExtractor {
-    pub fn new() -> Self {
-        Self {}
-    }
+#[derive(Default)]
+pub struct OptionExtractor {}
 
+impl OptionExtractor {
     pub fn extract(&self, arguments: Vec<String>, execute_path: &String) -> Vec<String> {
         return arguments
             .iter()
