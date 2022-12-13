@@ -10,7 +10,7 @@ use crate::lexers::option_lexer::Options;
 pub struct Executor {}
 
 impl Executor {
-    pub async fn execute(command_name: &String, arguments: &Vec<String>, options: &Options) {
+    pub async fn execute(&self, command_name: &String, arguments: &Vec<String>, options: &Options) {
         let result = Executor::resolve(command_name);
 
         match result.await {

@@ -36,12 +36,14 @@ async fn main() {
 
     let options = lexer.parse(&option_arguments);
 
+    let executor = Executor::default();
+
     match arguments.split_first() {
         Some((command, args)) if !args.is_empty() => {
-            Executor::execute(command, &args.to_vec(), &options).await;
+            executor.execute(command, &args.to_vec(), &options).await;
         },
         Some((command, _)) => {
-            Executor::execute(command, &Vec::new(), &options).await;
+            executor.execute(command, &Vec::new(), &options).await;
         },
         _ => {
             println!("Use --help.");
