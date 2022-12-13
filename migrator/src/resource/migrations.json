@@ -1,0 +1,17 @@
+{
+  "TableName" : "migrations",
+  "KeySchema": [
+    {
+      "AttributeName": "file_name",
+      "KeyType": "S"
+    },
+    {
+      "AttributeName": "executed_at",
+      "KeyType": "S"
+    }
+  ],
+  "ProvisionedThroughput": {
+    "ReadCapacityUnits": 1,
+    "WriteCapacityUnits": 1
+  }
+}
