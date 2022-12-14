@@ -2,6 +2,7 @@ use std::env;
 use std::process::exit;
 
 mod commands;
+mod config;
 mod executor;
 mod extractor;
 mod clients;

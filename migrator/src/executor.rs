@@ -1,9 +1,11 @@
+use aws_config::SdkConfig;
 use aws_sdk_dynamodb as dynamodb;
 use crate::clients::dynamodb_client::DynamodbClient;
 
 use crate::commands::list::List;
 use crate::command::Command;
 use crate::commands::migrate::Migrate;
+use crate::config::aws_config::AwsConfig;
 use crate::lexers::option_lexer::Options;
 
 #[derive(Default)]
@@ -11,18 +13,18 @@ pub struct Executor {}
 
 impl Executor {
     pub async fn execute(&self, command_name: &String, arguments: &Vec<String>, options: &Options) {
-        let result = Executor::resolve(command_name);
+        let config =  AwsConfig::aws_config().await;
 
-        match result.await {
+        let result= &self.find_by_command_name(command_name, &config);
+
+        match result {
             Ok(ref command) => command.execute(arguments, options),
             Err(_) => println!("Command {} was not found.", command_name),
         }
     }
 
-    async fn resolve(command_name: &String) -> Result<Box<dyn Command>, &str> {
-        let config = aws_config::load_from_env().await;
-
-        let migrate = Migrate::new(DynamodbClient::new(dynamodb::Client::new(&config)));
+    fn find_by_command_name(&self, command_name: &String, config: &SdkConfig) -> Result<Box<dyn Command>, &str> {
+        let migrate = Migrate::new(DynamodbClient::new(dynamodb::Client::new(config)));
         let list = List::new();
 
         let command: Box<dyn Command>;
