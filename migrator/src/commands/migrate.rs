@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+use serde::{Serialize, Deserialize};
 use std::env;
 use std::fs::File;
 use std::io::Read;
@@ -13,8 +15,25 @@ const MIGRATE_PATH: &str = "migrations";
 const RESOURCE_FILE_DIR: &str = "resource";
 const MANAGEMENT_TABLE_FILE_NAME: &str = "migrations.json";
 
+#[derive(Debug)]
 pub struct Migrate {
     dynamodb_client: DynamodbClient
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+struct ProvisionedThroughput {
+    #[serde(rename = "ReadCapacityUnits")]
+    read_capacity_units: u16,
+    #[serde(rename = "WriteCapacityUnits")]
+    write_capacity_units: u16
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+struct MigrationQuery {
+    #[serde(rename = "TableName")]
+    table_name: String,
+    #[serde(rename = "ProvisionedThroughput")]
+    provisioned_throughput: ProvisionedThroughput,
 }
 
 impl Migrate {
@@ -60,7 +79,17 @@ impl Migrate {
 
         dbg!(migration_contents.clone());
 
+        let aaa = &self.parse(&migration_contents);
+
         migration_contents
+    }
+
+    fn parse(&self, contents: &str) -> MigrationQuery {
+        let deserialized: MigrationQuery  = serde_json::from_str(contents).unwrap();
+
+        println!("{:?}", deserialized);
+
+        deserialized
     }
 }
 
