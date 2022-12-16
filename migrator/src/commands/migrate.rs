@@ -9,6 +9,7 @@ use std::process::exit;
 use crate::command::Command;
 use crate::clients::dynamodb_client;
 use crate::clients::dynamodb_client::DynamodbClient;
+use crate::commands::migration_query::MigrationQuery;
 use crate::lexers::option_lexer::Options;
 
 const MIGRATE_PATH: &str = "migrations";
@@ -18,22 +19,6 @@ const MANAGEMENT_TABLE_FILE_NAME: &str = "migrations.json";
 #[derive(Debug)]
 pub struct Migrate {
     dynamodb_client: DynamodbClient
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-struct ProvisionedThroughput {
-    #[serde(rename = "ReadCapacityUnits")]
-    read_capacity_units: u16,
-    #[serde(rename = "WriteCapacityUnits")]
-    write_capacity_units: u16
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-struct MigrationQuery {
-    #[serde(rename = "TableName")]
-    table_name: String,
-    #[serde(rename = "ProvisionedThroughput")]
-    provisioned_throughput: ProvisionedThroughput,
 }
 
 impl Migrate {
