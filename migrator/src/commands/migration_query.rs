@@ -1,7 +1,6 @@
-use std::collections::HashMap;
 use serde::{Serialize, Deserialize};
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Default)]
 pub struct ProvisionedThroughput {
     #[serde(rename = "ReadCapacityUnits")]
     read_capacity_units: u16,
@@ -9,7 +8,7 @@ pub struct ProvisionedThroughput {
     write_capacity_units: u16
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Default)]
 pub struct KeySchema {
     #[serde(rename = "AttributeName")]
     attribute_name: String,
@@ -17,7 +16,7 @@ pub struct KeySchema {
     key_type: String
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Default)]
 pub struct MigrationQuery {
     #[serde(rename = "TableName")]
     table_name: String,
@@ -25,4 +24,10 @@ pub struct MigrationQuery {
     key_schema: Vec<KeySchema>,
     #[serde(rename = "ProvisionedThroughput")]
     provisioned_throughput: ProvisionedThroughput,
+}
+
+impl MigrationQuery {
+    pub fn table_name(&self) -> &str {
+        &self.table_name
+    }
 }

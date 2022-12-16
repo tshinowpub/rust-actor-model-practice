@@ -5,6 +5,8 @@ use std::fs::File;
 use std::io::Read;
 use std::path::PathBuf;
 use std::process::exit;
+use aws_sdk_dynamodb::model::{AttributeDefinition, ScalarAttributeType};
+use serde_json::Error;
 
 use crate::command::Command;
 use crate::clients::dynamodb_client;
@@ -51,7 +53,7 @@ impl Migrate {
             .join(MANAGEMENT_TABLE_FILE_NAME)
     }
 
-    fn migration_table_contents(&self) -> String {
+    fn migration_table_contents(&self) {
         let migration_file_path = &self.migration_file_path();
 
         dbg!(migration_file_path.clone());
@@ -64,17 +66,29 @@ impl Migrate {
 
         dbg!(migration_contents.clone());
 
-        let aaa = &self.parse(&migration_contents);
+        let query = &self.parse(&migration_contents).expect("Cannot parse migration.json.");
 
-        migration_contents
+        let _ = &self.create_table(query);
     }
 
-    fn parse(&self, contents: &str) -> MigrationQuery {
-        let deserialized: MigrationQuery  = serde_json::from_str(contents).unwrap();
-
-        println!("{:?}", deserialized);
+    fn parse(&self, contents: &str) -> Result<MigrationQuery, Error> {
+        let deserialized: Result<MigrationQuery, Error> = serde_json::from_str(contents);
 
         deserialized
+    }
+
+    fn create_table(&self, query: &MigrationQuery) {
+        println!("Called create_table!!!");
+
+        let table_name = query.table_name();
+
+        println!("TableName: {}", table_name);
+
+        /*
+        let attribute_definition = AttributeDefinition::builder()
+            .attribute_name(&a_name)
+            .attribute_type(ScalarAttributeType::S)
+            .build();*/
     }
 }
 
