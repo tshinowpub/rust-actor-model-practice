@@ -1,3 +1,5 @@
+use async_trait::async_trait;
+
 use crate::command::Command;
 use crate::lexers::option_lexer::Options;
 
@@ -9,8 +11,9 @@ impl List {
     }
 }
 
+#[async_trait]
 impl Command for List {
-    fn execute(&self, arguments: &Vec<String>, options: &Options) {
+    async fn execute(&self, arguments: &Vec<String>, options: &Options) {
         println!("List!!!")
     }
 

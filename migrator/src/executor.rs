@@ -18,7 +18,9 @@ impl Executor {
         let result= &self.find_by_command_name(command_name, &config);
 
         match result {
-            Ok(ref command) => command.execute(arguments, options),
+            Ok(ref command) => {
+                command.execute(arguments, options).await;
+            },
             Err(_) => println!("Command {} was not found.", command_name),
         }
     }

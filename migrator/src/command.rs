@@ -1,7 +1,9 @@
+use async_trait::async_trait;
 use crate::lexers::option_lexer::Options;
 
+#[async_trait]
 pub trait Command {
-    fn execute(&self, arguments: &Vec<String>, options: &Options);
+    async fn execute(&self, arguments: &Vec<String>, options: &Options);
 
     fn command_name(&self) -> &str;
 }

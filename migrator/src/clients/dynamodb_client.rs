@@ -11,4 +11,8 @@ impl DynamodbClient {
             client
         }
     }
+
+    pub fn create_table(&self) {
+        println!("Method create_table was called!!!")
+    }
 }

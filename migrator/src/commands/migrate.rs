@@ -1,17 +1,19 @@
-use std::collections::HashMap;
+use async_trait::async_trait;
 use serde::{Serialize, Deserialize};
 use std::env;
 use std::fs::File;
 use std::io::Read;
 use std::path::PathBuf;
 use std::process::exit;
-use aws_sdk_dynamodb::model::{AttributeDefinition, ScalarAttributeType};
+use aws_sdk_dynamodb::model::{AttributeDefinition, KeySchemaElement, KeyType, ProvisionedThroughput, ScalarAttributeType};
 use serde_json::Error;
+use aws_sdk_dynamodb::Client;
 
 use crate::command::Command;
 use crate::clients::dynamodb_client;
 use crate::clients::dynamodb_client::DynamodbClient;
 use crate::commands::migration_query::MigrationQuery;
+use crate::config::aws_config::AwsConfig;
 use crate::lexers::option_lexer::Options;
 
 const MIGRATE_PATH: &str = "migrations";
@@ -53,7 +55,7 @@ impl Migrate {
             .join(MANAGEMENT_TABLE_FILE_NAME)
     }
 
-    fn migration_table_contents(&self) {
+    async fn migration_table_contents(&self) {
         let migration_file_path = &self.migration_file_path();
 
         dbg!(migration_file_path.clone());
@@ -68,7 +70,11 @@ impl Migrate {
 
         let query = &self.parse(&migration_contents).expect("Cannot parse migration.json.");
 
+        println!("Before create_table !!!");
+
         let _ = &self.create_table(query);
+
+        println!("After create_table !!!");
     }
 
     fn parse(&self, contents: &str) -> Result<MigrationQuery, Error> {
@@ -77,7 +83,7 @@ impl Migrate {
         deserialized
     }
 
-    fn create_table(&self, query: &MigrationQuery) {
+    async fn create_table(&self, query: &MigrationQuery) {
         println!("Called create_table!!!");
 
         let table_name = query.table_name();
@@ -87,17 +93,65 @@ impl Migrate {
         /*
         let attribute_definition = AttributeDefinition::builder()
             .attribute_name(&a_name)
-            .attribute_type(ScalarAttributeType::S)
-            .build();*/
+                .attribute_type(ScalarAttributeType::S)
+                .build();
+*/
+
+        let key_schemas = query.key_schemas();
+
+        let map_key_schemas = key_schemas.to_vec();
+
+        let vec_key_schemas = map_key_schemas.iter()
+            .map(|key_schema| (
+                KeySchemaElement::builder()
+                    .attribute_name(key_schema.attribute_name()))
+                    .key_type(key_schema.key_type())
+                    .build()
+            )
+            .collect::<Vec<_>>();
+
+        let input_provisioned_throughput = query.provisioned_throughput();
+
+        let provisioned_throughput = ProvisionedThroughput::builder()
+            .read_capacity_units(*input_provisioned_throughput.read_capacity_units())
+            .write_capacity_units(*input_provisioned_throughput.write_capacity_units())
+            .build();
+
+        let shared_config = AwsConfig::aws_config().await;
+        let client = Client::new(&shared_config);
+
+        let create_table_response = client
+            .create_table()
+            .table_name(table_name)
+            //.key_schema(key_schema_element)
+            //.attribute_definitions(attribute_definition)
+            .set_key_schema(Some(vec_key_schemas))
+            .provisioned_throughput(provisioned_throughput)
+            .send()
+            .await;
+
+        let _ = &self.dynamodb_client.create_table();
+
+        match create_table_response {
+            Ok(output) => {
+                dbg!("{}", output.table_description());
+            },
+            Err(error) => {
+                dbg!("{}", error.to_string());
+            }
+        }
+
+        println!("Table {} was created!!!", table_name)
     }
 }
 
+#[async_trait]
 impl Command for Migrate {
-    fn execute(&self, arguments: &Vec<String>, options: &Options) {
+    async fn execute(&self, arguments: &Vec<String>, options: &Options) {
         println!("Migrate!!!");
         println!("{}", MIGRATE_PATH);
 
-        let _ = &self.migration_table_contents();
+        let _ = &self.migration_table_contents().await;
     }
 
     fn command_name(&self) -> &str {
