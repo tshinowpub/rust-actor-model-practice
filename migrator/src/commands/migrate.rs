@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use serde::{Serialize, Deserialize};
-use std::env;
+use std::{env, fs};
 use std::fs::File;
 use std::io::Read;
 use std::path::PathBuf;
@@ -55,6 +55,30 @@ impl Migrate {
             .join(MANAGEMENT_TABLE_FILE_NAME)
     }
 
+    fn migration_dir(&self) -> PathBuf {
+        let current_dir = &self.current_dir();
+
+        current_dir
+            .join("src")
+            .join(RESOURCE_FILE_DIR)
+    }
+
+    fn read_migration_files(&self) -> Result<Vec<PathBuf>, &str> {
+        let mut migration_files: Vec<PathBuf> = Vec::new();
+
+        let result = fs::read_dir(&self.migration_dir());
+        match result {
+            Ok(directory) => {
+                for file in directory.into_iter() {
+                    migration_files.push(file.expect("").path());
+                }
+            },
+            _ => return Err("Cannot read migration files.")
+        }
+
+        Ok(migration_files)
+    }
+
     async fn migration_table_contents(&self) {
         let migration_file_path = &self.migration_file_path();
 
@@ -72,7 +96,7 @@ impl Migrate {
 
         println!("Before create_table !!!");
 
-        let _ = &self.create_table(query);
+        let _ = &self.create_table(query).await;
 
         println!("After create_table !!!");
     }
@@ -150,6 +174,10 @@ impl Command for Migrate {
     async fn execute(&self, arguments: &Vec<String>, options: &Options) {
         println!("Migrate!!!");
         println!("{}", MIGRATE_PATH);
+
+        let files = &self.read_migration_files();
+
+
 
         let _ = &self.migration_table_contents().await;
     }
