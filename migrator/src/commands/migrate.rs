@@ -68,7 +68,7 @@ impl Migrate {
     fn read_contents(&self, path: &PathBuf) -> Result<MigrationQuery, Error> {
         let mut migration_contents = String::new();
 
-        let mut migration_file = &self.read_file(path);
+        let mut migration_file = self.read_file(path);
         migration_file
             .read_to_string(&mut migration_contents)
             .expect("Cannot read migration file.");
@@ -76,19 +76,19 @@ impl Migrate {
         self.to_migration_query(&migration_contents)
     }
 
-    fn read_file(&self, path: &PathBuf) -> File {
+    fn read_file(self, path: &PathBuf) -> File {
         let file = File::open(path).expect("File was not found.");
 
         file
     }
 
-    fn to_migration_query(&self, contents: &str) -> Result<MigrationQuery, Error> {
+    fn to_migration_query(self, contents: &str) -> Result<MigrationQuery, Error> {
         let deserialized= serde_json::from_str(contents);
 
         deserialized
     }
 
-    async fn create_table(&self, query: &MigrationQuery) {
+    async fn create_table(self, query: &MigrationQuery) {
         println!("Called create_table!!!");
 
         let table_name = query.table_name();
