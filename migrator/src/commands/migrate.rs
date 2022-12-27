@@ -27,7 +27,7 @@ impl Migrate {
         Self {}
     }
 
-    fn current_dir(&self) -> PathBuf {
+    fn current_dir(self) -> PathBuf {
         let current_dir;
         match env::current_dir() {
             Ok(path) => current_dir = path,
@@ -41,8 +41,8 @@ impl Migrate {
         current_dir
     }
 
-    fn migration_dir(&self) -> PathBuf {
-        let current_dir = &self.current_dir();
+    fn migration_dir(self) -> PathBuf {
+        let current_dir = self.current_dir();
 
         current_dir
             .join("src")
@@ -52,7 +52,7 @@ impl Migrate {
     fn read_migration_files(&self) -> Result<Vec<PathBuf>, &str> {
         let mut migration_files: Vec<PathBuf> = Vec::new();
 
-        let result = fs::read_dir(&self.migration_dir());
+        let result = fs::read_dir(self.migration_dir());
         match result {
             Ok(directory) => {
                 for file in directory.into_iter() {
@@ -65,7 +65,7 @@ impl Migrate {
         Ok(migration_files)
     }
 
-    fn read_contents(&self, path: &PathBuf) -> Result<MigrationQuery, Error> {
+    fn read_contents(self, path: &PathBuf) -> Result<MigrationQuery, Error> {
         let mut migration_contents = String::new();
 
         let mut migration_file = self.read_file(path);
