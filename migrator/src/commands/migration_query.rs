@@ -47,7 +47,15 @@ impl KeySchema {
     }
 
     pub fn key_type(&self) -> KeyType {
-        KeyType::Hash
+        match &self.key_type {
+            _ if &self.key_type.to_string() == "HASH" => KeyType::Hash,
+            _ if &self.key_type.to_string() == "RANGE" => KeyType::Range,
+            _ => {
+                let name = &self.key_type.to_string();
+
+                KeyType::Unknown(name.clone())
+            }
+        }
     }
 }
 
