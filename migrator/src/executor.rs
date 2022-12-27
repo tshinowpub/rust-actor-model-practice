@@ -12,7 +12,7 @@ use crate::lexers::option_lexer::Options;
 pub struct Executor {}
 
 impl Executor {
-    pub async fn execute(&self, command_name: &String, arguments: &Vec<String>, options: &Options) {
+    pub async fn execute(self, command_name: &String, arguments: &Vec<String>, options: &Options) {
         let config =  AwsConfig::aws_config().await;
 
         let result= self.find_by_command_name(command_name, &config);
@@ -25,7 +25,7 @@ impl Executor {
         }
     }
 
-    fn find_by_command_name(&self, command_name: &String, config: &SdkConfig) -> Result<Box<dyn Command>, &str> {
+    fn find_by_command_name<'a>(self, command_name: &'a String, config: &'a SdkConfig) -> Result<Box<dyn Command>, &'a str> {
         let migrate = Migrate::new(DynamodbClient::new(dynamodb::Client::new(config)));
         let list = List::new();
 
