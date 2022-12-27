@@ -15,10 +15,10 @@ impl Executor {
     pub async fn execute(&self, command_name: &String, arguments: &Vec<String>, options: &Options) {
         let config =  AwsConfig::aws_config().await;
 
-        let result= &self.find_by_command_name(command_name, &config);
+        let result= self.find_by_command_name(command_name, &config);
 
         match result {
-            Ok(ref command) => {
+            Ok(command) => {
                 command.execute(arguments, options).await;
             },
             Err(_) => println!("Command {} was not found.", command_name),

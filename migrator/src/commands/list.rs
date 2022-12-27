@@ -3,6 +3,7 @@ use async_trait::async_trait;
 use crate::command::Command;
 use crate::lexers::option_lexer::Options;
 
+#[derive(Debug, Copy, Clone)]
 pub struct List {}
 
 impl List {
@@ -17,7 +18,7 @@ impl Command for List {
         println!("List!!!")
     }
 
-    fn command_name(&self) -> &str {
+    fn command_name(self) -> &'static str {
         "list"
     }
 }

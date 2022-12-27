@@ -1,5 +1,4 @@
 use async_trait::async_trait;
-use serde::{Serialize, Deserialize};
 use std::{env, fs};
 use std::fs::File;
 use std::io::Read;
@@ -18,18 +17,14 @@ use crate::lexers::option_lexer::Options;
 
 const MIGRATE_PATH: &str = "migrations";
 const RESOURCE_FILE_DIR: &str = "resource";
-const MANAGEMENT_TABLE_FILE_NAME: &str = "migrations.json";
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct Migrate {
-    dynamodb_client: DynamodbClient
 }
 
 impl Migrate {
     pub fn new(dynamodb_client: DynamodbClient) -> Self {
-        Self {
-            dynamodb_client
-        }
+        Self {}
     }
 
     fn current_dir(&self) -> PathBuf {
@@ -44,15 +39,6 @@ impl Migrate {
         };
 
         current_dir
-    }
-
-    fn migration_file_path(&self) -> PathBuf {
-        let current_dir = &self.current_dir();
-
-        current_dir
-            .join("src")
-            .join(RESOURCE_FILE_DIR)
-            .join(MANAGEMENT_TABLE_FILE_NAME)
     }
 
     fn migration_dir(&self) -> PathBuf {
@@ -79,30 +65,25 @@ impl Migrate {
         Ok(migration_files)
     }
 
-    async fn migration_table_contents(&self) {
-        let migration_file_path = &self.migration_file_path();
-
-        dbg!(migration_file_path.clone());
-
-        let mut migration_file = File::open(migration_file_path).expect("Migration file was not found.");
-
+    fn read_contents(&self, path: &PathBuf) -> Result<MigrationQuery, Error> {
         let mut migration_contents = String::new();
 
-        migration_file.read_to_string(&mut migration_contents).expect("Cannot read migration file.");
+        let mut migration_file = &self.read_file(path);
+        migration_file
+            .read_to_string(&mut migration_contents)
+            .expect("Cannot read migration file.");
 
-        dbg!(migration_contents.clone());
-
-        let query = &self.parse(&migration_contents).expect("Cannot parse migration.json.");
-
-        println!("Before create_table !!!");
-
-        let _ = &self.create_table(query).await;
-
-        println!("After create_table !!!");
+        self.to_migration_query(&migration_contents)
     }
 
-    fn parse(&self, contents: &str) -> Result<MigrationQuery, Error> {
-        let deserialized: Result<MigrationQuery, Error> = serde_json::from_str(contents);
+    fn read_file(&self, path: &PathBuf) -> File {
+        let file = File::open(path).expect("File was not found.");
+
+        file
+    }
+
+    fn to_migration_query(&self, contents: &str) -> Result<MigrationQuery, Error> {
+        let deserialized= serde_json::from_str(contents);
 
         deserialized
     }
@@ -154,8 +135,6 @@ impl Migrate {
             .send()
             .await;
 
-        let _ = &self.dynamodb_client.create_table();
-
         match create_table_response {
             Ok(output) => {
                 dbg!("{}", output.table_description());
@@ -175,14 +154,23 @@ impl Command for Migrate {
         println!("Migrate!!!");
         println!("{}", MIGRATE_PATH);
 
-        let files = &self.read_migration_files();
+        match self.read_migration_files() {
+            Ok(target_files) => {
+                for migration_file in target_files {
+                    println!("{}", migration_file.to_str().unwrap());
 
+                    let query = self.read_contents(&migration_file).unwrap();
 
-
-        let _ = &self.migration_table_contents().await;
+                    self.create_table(&query).await;
+                }
+            },
+            _ => {
+                panic!("Cannot read migration files.");
+            }
+        }
     }
 
-    fn command_name(&self) -> &str {
+    fn command_name(self) -> &'static str {
         "migrate"
     }
 }
