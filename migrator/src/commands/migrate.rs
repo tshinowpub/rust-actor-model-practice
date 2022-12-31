@@ -1,7 +1,7 @@
 use async_trait::async_trait;
-use std::{env, fs};
+use std::{env, fs, io, result};
 use std::fs::File;
-use std::io::Read;
+use std::io::{Read, Result};
 use std::path::PathBuf;
 use std::process::exit;
 use aws_sdk_dynamodb::model::{AttributeDefinition, KeySchemaElement, KeyType, ProvisionedThroughput, ScalarAttributeType};
@@ -27,53 +27,48 @@ impl Migrate {
         Self {}
     }
 
-    fn current_dir(self) -> PathBuf {
-        let current_dir;
-        match env::current_dir() {
-            Ok(path) => current_dir = path,
-            Err(error) => {
-                println!("Failed to get current execute path: {}.", error);
+    fn migration_dir(self) -> Result<PathBuf> {
+        let current_dir = env::current_dir();
 
-                exit(1);
-            },
-        };
-
-        current_dir
+        match current_dir {
+            Ok(path) => Ok(path.join("src").join(RESOURCE_FILE_DIR)),
+            _ => current_dir,
+        }
     }
 
-    fn migration_dir(self) -> PathBuf {
-        let current_dir = self.current_dir();
-
-        current_dir
-            .join("src")
-            .join(RESOURCE_FILE_DIR)
-    }
-
-    fn read_migration_files(&self) -> Result<Vec<PathBuf>, &str> {
+    fn read_migration_files(&self, current_path: PathBuf) -> result::Result<Vec<PathBuf>, &str> {
         let mut migration_files: Vec<PathBuf> = Vec::new();
 
-        let result = fs::read_dir(self.migration_dir());
+        let result = fs::read_dir(current_path);
         match result {
             Ok(directory) => {
                 for file in directory.into_iter() {
                     migration_files.push(file.expect("").path());
                 }
             },
-            _ => return Err("Cannot read migration files.")
+            _ => return Err("aaaa"),
         }
 
         Ok(migration_files)
     }
 
-    fn read_contents(self, path: &PathBuf) -> Result<MigrationQuery, Error> {
+    fn read_contents(self, path: &PathBuf) -> result::Result<MigrationQuery, &str> {
         let mut migration_contents = String::new();
 
-        let mut migration_file = self.read_file(path);
-        migration_file
-            .read_to_string(&mut migration_contents)
-            .expect("Cannot read migration file.");
+        let mut migration_file = File::open(path);
+        match migration_file {
+            Ok(mut target_file) => {
+                if target_file.read_to_string(&mut migration_contents).is_ok() {
+                    return match self.to_migration_query(&migration_contents) {
+                        Ok(query) => Ok(query),
+                        _ => Err("Cannot parse json file.")
+                    }
+                }
 
-        self.to_migration_query(&migration_contents)
+                Err("Cannot load migration contents. File name: ")
+            },
+            _ => Err("Cannot read migration file.")
+        }
     }
 
     fn read_file(self, path: &PathBuf) -> File {
@@ -82,7 +77,7 @@ impl Migrate {
         file
     }
 
-    fn to_migration_query(self, contents: &str) -> Result<MigrationQuery, Error> {
+    fn to_migration_query(self, contents: &str) -> result::Result<MigrationQuery, Error> {
         let deserialized= serde_json::from_str(contents);
 
         deserialized
@@ -151,10 +146,13 @@ impl Migrate {
 #[async_trait]
 impl Command for Migrate {
     async fn execute(&self, arguments: &Vec<String>, options: &Options) -> Output {
-        println!("Migrate!!!");
-        println!("{}", MIGRATE_PATH);
+        let migration_dir;
+        match self.migration_dir() {
+            Ok(target_dir) => migration_dir = target_dir,
+            Err(error) => return Output::new(ExitCode::FAILED, format!("Failed to get current execute path: {}.", error).to_string()),
+        }
 
-        match self.read_migration_files() {
+        match self.read_migration_files(migration_dir) {
             Ok(target_files) => {
                 for migration_file in target_files {
                     println!("{}", migration_file.to_str().unwrap());
@@ -164,12 +162,10 @@ impl Command for Migrate {
                     self.create_table(&query).await;
                 }
             },
-            _ => {
-                panic!("Cannot read migration files.");
-            }
+            _ => return Output::new(ExitCode::FAILED, "Cannot read migration files.".to_string())
         }
 
-        Output::new(ExitCode::SUCCEED, "".to_string())
+        Output::new(ExitCode::SUCCEED, "Migrate command succeed.".to_string())
     }
 
     fn command_name(self) -> &'static str {

@@ -6,6 +6,7 @@ mod commands;
 mod config;
 mod executor;
 mod extractor;
+mod file;
 mod clients;
 mod lexers;
 
