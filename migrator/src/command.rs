@@ -3,7 +3,7 @@ use crate::lexers::option_lexer::Options;
 
 #[async_trait]
 pub trait Command {
-    async fn execute(&self, arguments: &Vec<String>, options: &Options);
+    async fn execute(&self, arguments: &Vec<String>, options: &Options) -> Output;
 
     fn command_name(self) -> &'static str;
 }
@@ -11,16 +11,24 @@ pub trait Command {
 #[derive(Debug, Clone)]
 pub struct Output {
     exit_code: ExitCode,
-    output: String
+    message: String
 }
 
 impl Output {
-    pub fn new(exit_code: ExitCode, output: String) -> Self {
-        Self{ exit_code, output }
+    pub fn new(exit_code: ExitCode, message: String) -> Self {
+        Self{ exit_code, message }
+    }
+
+    pub fn exit_code(&self) -> &ExitCode {
+        &self.exit_code
+    }
+
+    pub fn message(&self) -> &str {
+        &self.message
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub enum ExitCode {
     SUCCEED = 0,
     FAILED = 1

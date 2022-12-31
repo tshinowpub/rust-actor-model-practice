@@ -150,7 +150,7 @@ impl Migrate {
 
 #[async_trait]
 impl Command for Migrate {
-    async fn execute(&self, arguments: &Vec<String>, options: &Options) {
+    async fn execute(&self, arguments: &Vec<String>, options: &Options) -> Output {
         println!("Migrate!!!");
         println!("{}", MIGRATE_PATH);
 
@@ -169,7 +169,7 @@ impl Command for Migrate {
             }
         }
 
-        Output::new(ExitCode::SUCCEED, "".to_string());
+        Output::new(ExitCode::SUCCEED, "".to_string())
     }
 
     fn command_name(self) -> &'static str {

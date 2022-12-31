@@ -3,7 +3,7 @@ use aws_sdk_dynamodb as dynamodb;
 use crate::clients::dynamodb_client::DynamodbClient;
 
 use crate::commands::list::List;
-use crate::command::Command;
+use crate::command::{Command, ExitCode, Output};
 use crate::commands::migrate::Migrate;
 use crate::config::aws_config::AwsConfig;
 use crate::lexers::option_lexer::Options;
@@ -12,17 +12,22 @@ use crate::lexers::option_lexer::Options;
 pub struct Executor {}
 
 impl Executor {
-    pub async fn execute(self, command_name: &String, arguments: &Vec<String>, options: &Options) {
+    pub async fn execute(self, command_name: &String, arguments: &Vec<String>, options: &Options) -> Output {
         let config =  AwsConfig::aws_config().await;
 
         let result= self.find_by_command_name(command_name, &config);
 
+        let output: Output;
         match result {
             Ok(command) => {
-                command.execute(arguments, options).await;
+                output = command.execute(arguments, options).await;
             },
-            Err(_) => println!("Command {} was not found.", command_name),
+            Err(_) => {
+                output = Output::new(ExitCode::FAILED, format!("Command {} was not found.", command_name))
+            },
         }
+
+        output
     }
 
     fn find_by_command_name<'a>(self, command_name: &'a String, config: &'a SdkConfig) -> Result<Box<dyn Command>, &'a str> {

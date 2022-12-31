@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 
-use crate::command::Command;
+use crate::command::{Command, ExitCode, Output};
 use crate::lexers::option_lexer::Options;
 
 #[derive(Debug, Copy, Clone)]
@@ -14,8 +14,8 @@ impl List {
 
 #[async_trait]
 impl Command for List {
-    async fn execute(&self, arguments: &Vec<String>, options: &Options) {
-        println!("List!!!")
+    async fn execute(&self, arguments: &Vec<String>, options: &Options) -> Output {
+        Output::new(ExitCode::SUCCEED, "List !!!".to_string())
     }
 
     fn command_name(self) -> &'static str {

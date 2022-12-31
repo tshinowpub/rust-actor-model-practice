@@ -1,5 +1,6 @@
 use std::env;
 use std::process::exit;
+use crate::command::Output;
 
 mod commands;
 mod config;
@@ -39,12 +40,13 @@ async fn main() {
 
     let executor = Executor::default();
 
+    let output: Output;
     match arguments.split_first() {
         Some((command, args)) if !args.is_empty() => {
-            executor.execute(command, &args.to_vec(), &options).await;
+            output = executor.execute(command, &args.to_vec(), &options).await;
         },
         Some((command, _)) => {
-            executor.execute(command, &Vec::new(), &options).await;
+            output = executor.execute(command, &Vec::new(), &options).await;
         },
         _ => {
             println!("Use --help.");
@@ -53,5 +55,5 @@ async fn main() {
         }
     }
 
-    exit(0);
+    exit(*(output.exit_code()) as i32);
 }
