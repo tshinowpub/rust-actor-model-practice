@@ -8,7 +8,7 @@ use aws_sdk_dynamodb::model::{AttributeDefinition, KeySchemaElement, KeyType, Pr
 use serde_json::Error;
 use aws_sdk_dynamodb::Client;
 
-use crate::command::Command;
+use crate::command::{Command, ExitCode, Output};
 use crate::clients::dynamodb_client;
 use crate::clients::dynamodb_client::DynamodbClient;
 use crate::commands::migration_query::MigrationQuery;
@@ -168,6 +168,8 @@ impl Command for Migrate {
                 panic!("Cannot read migration files.");
             }
         }
+
+        Output::new(ExitCode::SUCCEED, "".to_string());
     }
 
     fn command_name(self) -> &'static str {
