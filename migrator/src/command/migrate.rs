@@ -7,6 +7,9 @@ use std::process::exit;
 use aws_sdk_dynamodb::model::{AttributeDefinition, KeySchemaElement, KeyType, ProvisionedThroughput, ScalarAttributeType};
 use serde_json::Error;
 use aws_sdk_dynamodb::Client;
+use aws_sdk_dynamodb::error::CreateTableError;
+use aws_sdk_dynamodb::output::CreateTableOutput;
+use aws_sdk_dynamodb::types::SdkError;
 
 use crate::command::{Command, ExitCode, Output};
 use crate::clients::dynamodb_client;
@@ -83,7 +86,7 @@ impl Migrate {
         deserialized
     }
 
-    async fn create_table(self, query: &MigrationQuery) {
+    async fn create_table(self, query: &MigrationQuery) -> result::Result<CreateTableOutput, SdkError<CreateTableError>> {
         println!("Called create_table!!!");
 
         let table_name = query.table_name();
@@ -130,26 +133,31 @@ impl Migrate {
             .send()
             .await;
 
-        match create_table_response {
+        println!("Table {} was created!!!", table_name);
+
+        return match create_table_response {
             Ok(output) => {
                 dbg!("{}", output.table_description());
+
+                Ok(output)
             },
             Err(error) => {
                 dbg!("{}", error.to_string());
+
+                Err(error)
             }
         }
-
-        println!("Table {} was created!!!", table_name)
     }
-}
 
-#[async_trait]
-impl Command for Migrate {
-    async fn execute(&self, arguments: &Vec<String>, options: &Options) -> Output {
+    fn exists_migration_table(self) -> bool {
+        false
+    }
+
+    async fn create_migration_table(self) -> result::Result<bool, String> {
         let migration_dir;
         match self.migration_dir() {
             Ok(target_dir) => migration_dir = target_dir,
-            Err(error) => return Output::new(ExitCode::FAILED, format!("Failed to get current execute path: {}.", error).to_string()),
+            Err(error)       => return Err(format!("Failed to get current execute path: {}.", error)),
         }
 
         match self.read_migration_files(migration_dir) {
@@ -159,10 +167,29 @@ impl Command for Migrate {
 
                     let query = self.read_contents(&migration_file).unwrap();
 
-                    self.create_table(&query).await;
+                    let create_table_result = self.create_table(&query).await;
+
+                    match create_table_result {
+                        Ok(output)       => return Ok(true),
+                        Err(error) => return Err(error.to_string()),
+                    }
                 }
             },
-            _ => return Output::new(ExitCode::FAILED, "Cannot read migration files.".to_string())
+            _ => return Err("Cannot read migration files.".to_string()),
+        }
+
+        Ok(true)
+    }
+}
+
+#[async_trait]
+impl Command for Migrate {
+    async fn execute(&self, arguments: &Vec<String>, options: &Options) -> Output {
+        if self.exists_migration_table() == false {
+            let result = self.create_migration_table().await;
+            if let Err(message) = result {
+                return Output::new(ExitCode::FAILED, message)
+            }
         }
 
         Output::new(ExitCode::SUCCEED, "Migrate command succeed.".to_string())
