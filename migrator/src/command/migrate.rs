@@ -132,9 +132,7 @@ impl Migrate {
             .provisioned_throughput(provisioned_throughput)
             .send()
             .await;
-
-        println!("Table {} was created!!!", table_name);
-
+        
         return match create_table_response {
             Ok(output) => {
                 dbg!("{}", output.table_description());
