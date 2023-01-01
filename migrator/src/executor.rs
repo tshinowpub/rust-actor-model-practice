@@ -6,7 +6,7 @@ use crate::command::list::List;
 use crate::command::{Command, ExitCode, Output};
 use crate::command::migrate::Migrate;
 use crate::config::aws_config::AwsConfig;
-use crate::lexers::option_lexer::Options;
+use crate::lexer::option_lexer::Options;
 
 #[derive(Default)]
 pub struct Executor {}

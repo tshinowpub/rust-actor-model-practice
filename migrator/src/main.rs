@@ -8,12 +8,12 @@ mod executor;
 mod extractor;
 mod file;
 mod clients;
-mod lexers;
+mod lexer;
 
 use crate::executor::Executor;
 use crate::extractor::argument_extractor::ArgumentExtractor;
 use crate::extractor::option_extractor::OptionExtractor;
-use crate::lexers::option_lexer::OptionLexer;
+use crate::lexer::option_lexer::OptionLexer;
 
 #[tokio::main]
 async fn main() {

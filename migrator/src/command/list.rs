@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 
 use crate::command::{Command, ExitCode, Output};
-use crate::lexers::option_lexer::Options;
+use crate::lexer::option_lexer::Options;
 
 #[derive(Debug, Copy, Clone)]
 pub struct List {}

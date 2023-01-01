@@ -13,7 +13,7 @@ use crate::clients::dynamodb_client;
 use crate::clients::dynamodb_client::DynamodbClient;
 use crate::command::migration_query::MigrationQuery;
 use crate::config::aws_config::AwsConfig;
-use crate::lexers::option_lexer::Options;
+use crate::lexer::option_lexer::Options;
 
 const MIGRATE_PATH: &str = "migrations";
 const RESOURCE_FILE_DIR: &str = "resource";

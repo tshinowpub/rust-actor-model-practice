@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use crate::lexers::option_lexer::Options;
+use crate::lexer::option_lexer::Options;
 
 pub mod migrate;
 pub mod migration_query;
