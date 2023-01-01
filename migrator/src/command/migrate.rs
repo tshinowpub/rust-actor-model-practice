@@ -11,7 +11,7 @@ use aws_sdk_dynamodb::Client;
 use crate::command::{Command, ExitCode, Output};
 use crate::clients::dynamodb_client;
 use crate::clients::dynamodb_client::DynamodbClient;
-use crate::commands::migration_query::MigrationQuery;
+use crate::command::migration_query::MigrationQuery;
 use crate::config::aws_config::AwsConfig;
 use crate::lexers::option_lexer::Options;
 

@@ -1,6 +1,10 @@
 use async_trait::async_trait;
 use crate::lexers::option_lexer::Options;
 
+pub mod migrate;
+pub mod migration_query;
+pub mod list;
+
 #[async_trait]
 pub trait Command {
     async fn execute(&self, arguments: &Vec<String>, options: &Options) -> Output;

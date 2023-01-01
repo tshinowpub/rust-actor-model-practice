@@ -2,9 +2,9 @@ use aws_config::SdkConfig;
 use aws_sdk_dynamodb as dynamodb;
 use crate::clients::dynamodb_client::DynamodbClient;
 
-use crate::commands::list::List;
+use crate::command::list::List;
 use crate::command::{Command, ExitCode, Output};
-use crate::commands::migrate::Migrate;
+use crate::command::migrate::Migrate;
 use crate::config::aws_config::AwsConfig;
 use crate::lexers::option_lexer::Options;
 

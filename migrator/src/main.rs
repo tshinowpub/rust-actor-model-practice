@@ -2,15 +2,13 @@ use std::env;
 use std::process::exit;
 use crate::command::{ExitCode, Output};
 
-mod commands;
+mod command;
 mod config;
 mod executor;
 mod extractor;
 mod file;
 mod clients;
 mod lexers;
-
-pub mod command;
 
 use crate::executor::Executor;
 use crate::extractor::argument_extractor::ArgumentExtractor;
