@@ -145,7 +145,7 @@ impl Migrate {
         false
     }
 
-    async fn create_migration_table(self) -> result::Result<bool, String> {
+    async fn create_migration_table(self) -> result::Result<(), String> {
         let migration_dir;
         match self.migration_dir() {
             Ok(target_dir) => migration_dir = target_dir,
@@ -162,7 +162,7 @@ impl Migrate {
                     let create_table_result = self.create_table(&query).await;
 
                     match create_table_result {
-                        Ok(output)       => return Ok(true),
+                        Ok(output)       => return Ok(()),
                         Err(error) => return Err(error.to_string()),
                     }
                 }
@@ -170,7 +170,7 @@ impl Migrate {
             _ => return Err("Cannot read migration files.".to_string()),
         }
 
-        Ok(true)
+        Ok(())
     }
 }
 
