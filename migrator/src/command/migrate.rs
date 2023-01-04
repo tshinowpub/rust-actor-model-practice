@@ -74,12 +74,6 @@ impl Migrate {
         }
     }
 
-    fn read_file(self, path: &PathBuf) -> File {
-        let file = File::open(path).expect("File was not found.");
-
-        file
-    }
-
     fn to_migration_query(self, contents: &str) -> result::Result<MigrationQuery, Error> {
         let deserialized= serde_json::from_str(contents);
 
