@@ -1,21 +1,21 @@
 use async_trait::async_trait;
-use std::{env, fs, io, result};
+use std::{env, fs, result};
 use std::fs::File;
 use std::io::{Read, Result};
 use std::path::PathBuf;
-use std::process::exit;
-use aws_sdk_dynamodb::model::{AttributeDefinition, KeySchemaElement, KeyType, ProvisionedThroughput, ScalarAttributeType};
+use aws_config::meta::region::RegionProviderChain;
+use aws_sdk_dynamodb::model::{KeySchemaElement, ProvisionedThroughput};
 use serde_json::Error;
-use aws_sdk_dynamodb::Client;
+use aws_sdk_dynamodb::{Client, Credentials, Endpoint, Region};
 use aws_sdk_dynamodb::error::CreateTableError;
 use aws_sdk_dynamodb::output::CreateTableOutput;
 use aws_sdk_dynamodb::types::SdkError;
+use http::Uri;
 
 use crate::command::{Command, ExitCode, Output};
 use crate::clients::dynamodb_client;
 use crate::clients::dynamodb_client::DynamodbClient;
 use crate::command::migration_query::MigrationQuery;
-use crate::config::aws_config::AwsConfig;
 use crate::lexer::option_lexer::Options;
 
 const MIGRATE_PATH: &str = "migrations";
@@ -114,8 +114,21 @@ impl Migrate {
             .write_capacity_units(*input_provisioned_throughput.write_capacity_units())
             .build();
 
-        let shared_config = AwsConfig::aws_config().await;
-        let client = Client::new(&shared_config);
+        /**
+        let region_provider = RegionProviderChain::default_provider().or_else("ap-northeast-1");
+        let shared_config = aws_config::from_env().region(region_provider).load().await;
+
+        let mut dynamodb_config_builder = aws_sdk_dynamodb::config::Builder::from(&shared_config);
+         */
+
+        let endpoint = Endpoint::immutable(Uri::from_static("http://localhost:8000"));
+        let dynamodb_local_config = aws_sdk_dynamodb::Config::builder()
+            .region(Region::new("ap-northeast-1"))
+            .endpoint_resolver(endpoint)
+            .credentials_provider(Credentials::new("test", "test", None, None, "default"))
+            .build();
+
+        let client = Client::from_conf(dynamodb_local_config);
 
         let create_table_response = client
             .create_table()

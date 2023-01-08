@@ -1,19 +1,28 @@
 use aws_config::SdkConfig;
 use aws_sdk_dynamodb as dynamodb;
+use aws_sdk_dynamodb::{Credentials, Region};
 use crate::clients::dynamodb_client::DynamodbClient;
 
 use crate::command::list::List;
 use crate::command::{Command, ExitCode, Output};
 use crate::command::migrate::Migrate;
-use crate::config::aws_config::AwsConfig;
 use crate::lexer::option_lexer::Options;
 
 #[derive(Default)]
 pub struct Executor {}
 
+/**
+ * https://github.com/awslabs/aws-sdk-rust/issues/425#issuecomment-1020265854
+ */
 impl Executor {
     pub async fn execute(self, command_name: &String, arguments: &Vec<String>, options: &Options) -> Output {
-        let config =  AwsConfig::aws_config().await;
+        let default_provider = Credentials::new("test", "test", None, None, "local");
+
+        let config = aws_config::from_env()
+            .credentials_provider(default_provider)
+            .region(Region::new("ap-northeast-1"))
+            .load()
+            .await;
 
         let result= self.find_by_command_name(command_name, &config);
 

@@ -1268,6 +1268,7 @@ dependencies = [
  "async-trait",
  "aws-config",
  "aws-sdk-dynamodb",
+ "http",
  "serde",
  "serde_json",
  "tokio",
