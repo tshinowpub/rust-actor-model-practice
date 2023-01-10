@@ -1,13 +1,19 @@
 {
   "TableName" : "migrations",
-  "KeySchema": [
+  "AttributeDefinitions": [
     {
-      "AttributeName": "file_name",
-      "KeyType": "S"
+      "AttributeName": "FileName",
+      "AttributeType": "S"
     },
     {
-      "AttributeName": "executed_at",
-      "KeyType": "S"
+      "AttributeName": "ExecutedAt",
+      "AttributeType": "S"
+    }
+  ],
+  "KeySchema": [
+    {
+      "KeyType": "HASH",
+      "AttributeName": "FileName"
     }
   ],
   "ProvisionedThroughput": {

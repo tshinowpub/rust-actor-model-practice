@@ -1,4 +1,4 @@
-use aws_sdk_dynamodb::model::KeyType;
+use aws_sdk_dynamodb::model::{KeyType, ScalarAttributeType};
 use serde::{Serialize, Deserialize};
 
 #[derive(Serialize, Deserialize, Debug, Default)]
@@ -17,10 +17,20 @@ pub struct KeySchema {
     key_type: String
 }
 
+#[derive(Serialize, Deserialize, Debug, Default, Clone)]
+pub struct AttributeDefinition {
+    #[serde(rename = "AttributeName")]
+    attribute_name: String,
+    #[serde(rename = "AttributeType")]
+    attribute_type: String
+}
+
 #[derive(Serialize, Deserialize, Debug, Default)]
 pub struct MigrationQuery {
     #[serde(rename = "TableName")]
     table_name: String,
+    #[serde(rename = "AttributeDefinitions")]
+    attribute_definitions: Vec<AttributeDefinition>,
     #[serde(rename = "KeySchema")]
     key_schemas: Vec<KeySchema>,
     #[serde(rename = "ProvisionedThroughput")]
@@ -34,6 +44,10 @@ impl MigrationQuery {
 
     pub fn key_schemas(&self) -> &Vec<KeySchema> {
         &self.key_schemas
+    }
+
+    pub fn attribute_definitions(&self) -> &Vec<AttributeDefinition> {
+        &self.attribute_definitions
     }
 
     pub fn provisioned_throughput(&self) -> &ProvisionedThroughput {
@@ -54,6 +68,25 @@ impl KeySchema {
                 let name = &self.key_type.to_string();
 
                 KeyType::Unknown(name.clone())
+            }
+        }
+    }
+}
+
+impl AttributeDefinition {
+    pub fn attribute_name(&self) -> &str {
+        &self.attribute_name
+    }
+
+    pub fn attribute_type(&self) -> ScalarAttributeType {
+        match &self.attribute_type {
+            _ if &self.attribute_type.to_string() == "S" => ScalarAttributeType::S,
+            _ if &self.attribute_type.to_string() == "N" => ScalarAttributeType::N,
+            _ if &self.attribute_type.to_string() == "B" => ScalarAttributeType::B,
+            _ => {
+                let name = &self.attribute_type.to_string();
+
+                ScalarAttributeType::Unknown(name.clone())
             }
         }
     }

@@ -4,7 +4,7 @@ use std::fs::File;
 use std::io::{Read, Result};
 use std::path::PathBuf;
 use aws_config::meta::region::RegionProviderChain;
-use aws_sdk_dynamodb::model::{KeySchemaElement, ProvisionedThroughput};
+use aws_sdk_dynamodb::model::{AttributeDefinition, KeySchemaElement, ProvisionedThroughput, ScalarAttributeType};
 use serde_json::Error;
 use aws_sdk_dynamodb::{Client, Credentials, Endpoint, Region};
 use aws_sdk_dynamodb::error::CreateTableError;
@@ -92,13 +92,25 @@ impl Migrate {
             .attribute_name(&a_name)
                 .attribute_type(ScalarAttributeType::S)
                 .build();
-*/
+        */
+
+        let attribute_definitions = query.attribute_definitions();
+        let mapped_attribute_definitions = attribute_definitions.to_vec();
+
+        let vec_attribute_definitions = mapped_attribute_definitions.iter()
+            .map(|attribute_definition| (
+                AttributeDefinition::builder()
+                    .attribute_name(attribute_definition.attribute_name()))
+                    .attribute_type(attribute_definition.attribute_type())
+                    .build()
+            )
+            .collect::<Vec<_>>();
 
         let key_schemas = query.key_schemas();
 
-        let map_key_schemas = key_schemas.to_vec();
+        let mapped_key_schemas = key_schemas.to_vec();
 
-        let vec_key_schemas = map_key_schemas.iter()
+        let vec_key_schemas = mapped_key_schemas.iter()
             .map(|key_schema| (
                 KeySchemaElement::builder()
                     .attribute_name(key_schema.attribute_name()))
@@ -114,7 +126,7 @@ impl Migrate {
             .write_capacity_units(*input_provisioned_throughput.write_capacity_units())
             .build();
 
-        /**
+        /*
         let region_provider = RegionProviderChain::default_provider().or_else("ap-northeast-1");
         let shared_config = aws_config::from_env().region(region_provider).load().await;
 
@@ -135,6 +147,7 @@ impl Migrate {
             .table_name(table_name)
             //.key_schema(key_schema_element)
             //.attribute_definitions(attribute_definition)
+            .set_attribute_definitions(Some(vec_attribute_definitions))
             .set_key_schema(Some(vec_key_schemas))
             .provisioned_throughput(provisioned_throughput)
             .send()
