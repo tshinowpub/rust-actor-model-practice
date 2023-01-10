@@ -14,6 +14,10 @@
     {
       "KeyType": "HASH",
       "AttributeName": "FileName"
+    },
+    {
+      "KeyType": "RANGE",
+      "AttributeName": "ExecutedAt"
     }
   ],
   "ProvisionedThroughput": {
