@@ -87,13 +87,6 @@ impl Migrate {
 
         println!("TableName: {}", table_name);
 
-        /*
-        let attribute_definition = AttributeDefinition::builder()
-            .attribute_name(&a_name)
-                .attribute_type(ScalarAttributeType::S)
-                .build();
-        */
-
         let attribute_definitions = query.attribute_definitions();
         let mapped_attribute_definitions = attribute_definitions.to_vec();
 
@@ -126,13 +119,6 @@ impl Migrate {
             .write_capacity_units(*input_provisioned_throughput.write_capacity_units())
             .build();
 
-        /*
-        let region_provider = RegionProviderChain::default_provider().or_else("ap-northeast-1");
-        let shared_config = aws_config::from_env().region(region_provider).load().await;
-
-        let mut dynamodb_config_builder = aws_sdk_dynamodb::config::Builder::from(&shared_config);
-         */
-
         let endpoint = Endpoint::immutable(Uri::from_static("http://localhost:8000"));
         let dynamodb_local_config = aws_sdk_dynamodb::Config::builder()
             .region(Region::new("ap-northeast-1"))
@@ -145,8 +131,6 @@ impl Migrate {
         let create_table_response = client
             .create_table()
             .table_name(table_name)
-            //.key_schema(key_schema_element)
-            //.attribute_definitions(attribute_definition)
             .set_attribute_definitions(Some(vec_attribute_definitions))
             .set_key_schema(Some(vec_key_schemas))
             .provisioned_throughput(provisioned_throughput)
