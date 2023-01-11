@@ -3,8 +3,7 @@ use std::{env, fs, result};
 use std::fs::File;
 use std::io::{Read, Result};
 use std::path::PathBuf;
-use aws_config::meta::region::RegionProviderChain;
-use aws_sdk_dynamodb::model::{AttributeDefinition, KeySchemaElement, ProvisionedThroughput, ScalarAttributeType};
+use aws_sdk_dynamodb::model::{AttributeDefinition, KeySchemaElement, ProvisionedThroughput};
 use serde_json::Error;
 use aws_sdk_dynamodb::{Client, Credentials, Endpoint, Region};
 use aws_sdk_dynamodb::error::CreateTableError;
@@ -80,10 +79,8 @@ impl Migrate {
         deserialized
     }
 
-    async fn create_table(self, query: &MigrationQuery) -> result::Result<CreateTableOutput, SdkError<CreateTableError>> {
+    async fn create_table(self, table_name: &str, query: &MigrationQuery) -> result::Result<CreateTableOutput, SdkError<CreateTableError>> {
         println!("Called create_table!!!");
-
-        let table_name = query.table_name();
 
         println!("TableName: {}", table_name);
 
@@ -151,7 +148,15 @@ impl Migrate {
         }
     }
 
-    fn exists_migration_table(self) -> bool {
+    async fn exists_table(self, table_name: &str) -> bool {
+        let client = self.create_client();
+
+        let describe_table_response = client
+            .describe_table()
+            .table_name(table_name)
+            .send()
+            .await;
+
         false
     }
 
@@ -169,12 +174,11 @@ impl Migrate {
 
                     let query = self.read_contents(&migration_file).unwrap();
 
-                    let create_table_result = self.create_table(&query).await;
+                    if self.exists_table(query.table_name()).await == true { return Ok(()) }
 
-                    match create_table_result {
-                        Ok(output)       => return Ok(()),
-                        Err(error) => return Err(error.to_string()),
-                    }
+                    let create_table_result = self.create_table(query.table_name(),&query).await;
+
+                    if let Err(error) = create_table_result { return Err(error.to_string()) }
                 }
             },
             _ => return Err("Cannot read migration files.".to_string()),
@@ -182,16 +186,25 @@ impl Migrate {
 
         Ok(())
     }
+
+    fn create_client(self) -> Client {
+        let endpoint = Endpoint::immutable(Uri::from_static("http://localhost:8000"));
+        let dynamodb_local_config = aws_sdk_dynamodb::Config::builder()
+            .region(Region::new("ap-northeast-1"))
+            .endpoint_resolver(endpoint)
+            .credentials_provider(Credentials::new("test", "test", None, None, "default"))
+            .build();
+
+        Client::from_conf(dynamodb_local_config)
+    }
 }
 
 #[async_trait]
 impl Command for Migrate {
     async fn execute(&self, arguments: &Vec<String>, options: &Options) -> Output {
-        if self.exists_migration_table() == false {
-            let result = self.create_migration_table().await;
-            if let Err(message) = result {
-                return Output::new(ExitCode::FAILED, message)
-            }
+        let result = self.create_migration_table().await;
+        if let Err(message) = result {
+            return Output::new(ExitCode::FAILED, message)
         }
 
         Output::new(ExitCode::SUCCEED, "Migrate command succeed.".to_string())
