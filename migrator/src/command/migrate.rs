@@ -2,6 +2,7 @@ use async_trait::async_trait;
 use std::{env, fs, result};
 use std::fs::File;
 use std::io::{Read, Result};
+use std::ops::Index;
 use std::path::PathBuf;
 use aws_sdk_dynamodb::model::{AttributeDefinition, KeySchemaElement, ProvisionedThroughput};
 use serde_json::Error;
@@ -189,11 +190,23 @@ impl Migrate {
     }
 
     fn create_client(self) -> Client { DynamodbClientFactory::factory() }
+
+    fn help(self) -> &'static str {
+        "Usage:  migrator [OPTIONS] Command \n
+        Options:
+            -f     Migration file path.
+            --help Display help.
+        "
+    }
 }
 
 #[async_trait]
 impl Command for Migrate {
     async fn execute(&self, arguments: &Vec<String>, options: &Options) -> Output {
+        if let Some(_) = options.get("help") {
+            return Output::new(ExitCode::SUCCEED, self.help().to_string());
+        }
+
         let result = self.create_migration_table().await;
         if let Err(message) = result {
             return Output::new(ExitCode::FAILED, message)
