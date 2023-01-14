@@ -174,7 +174,7 @@ impl Migrate {
                     let query = self.read_contents(&migration_file).unwrap();
 
                     match self.exists_table(query.table_name()).await {
-                        Ok(true) => return Ok(()),
+                        Ok(true) => {},
                         Ok(false) => {
                             let create_table_result = self.create_table(query.table_name(),&query).await;
 
@@ -182,7 +182,6 @@ impl Migrate {
                         },
                         Err(message) => return Err(message.to_string()),
                     }
-
                 }
             },
             Err(message) => return Err(message),
