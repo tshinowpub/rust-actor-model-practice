@@ -5,14 +5,13 @@ use std::io::{Read, Result};
 use std::path::PathBuf;
 use aws_sdk_dynamodb::model::{AttributeDefinition, KeySchemaElement, ProvisionedThroughput};
 use serde_json::Error;
-use aws_sdk_dynamodb::{Client, Credentials, Endpoint, Region};
+use aws_sdk_dynamodb::Client;
 use aws_sdk_dynamodb::error::CreateTableError;
 use aws_sdk_dynamodb::error::DescribeTableError;
 use aws_sdk_dynamodb::error::DescribeTableErrorKind::ResourceNotFoundException;
 use aws_sdk_dynamodb::output::CreateTableOutput;
 use aws_sdk_dynamodb::types::SdkError;
 use aws_sdk_dynamodb::types::SdkError::ServiceError;
-use http::Uri;
 
 use crate::command::{Command, ExitCode, Output};
 use crate::clients::dynamodb_client;
@@ -21,7 +20,6 @@ use crate::clients::dynamodb_client_factory::DynamodbClientFactory;
 use crate::command::migration_query::MigrationQuery;
 use crate::lexer::option_lexer::Options;
 
-const MIGRATE_PATH: &str = "migrations";
 const RESOURCE_FILE_DIR: &str = "resource";
 
 #[derive(Debug, Copy, Clone)]
@@ -120,14 +118,7 @@ impl Migrate {
             .write_capacity_units(*input_provisioned_throughput.write_capacity_units())
             .build();
 
-        let endpoint = Endpoint::immutable(Uri::from_static("http://localhost:8000"));
-        let dynamodb_local_config = aws_sdk_dynamodb::Config::builder()
-            .region(Region::new("ap-northeast-1"))
-            .endpoint_resolver(endpoint)
-            .credentials_provider(Credentials::new("test", "test", None, None, "default"))
-            .build();
-
-        let client = Client::from_conf(dynamodb_local_config);
+        let client = self.create_client();
 
         let create_table_response = client
             .create_table()
@@ -162,7 +153,7 @@ impl Migrate {
             .await;
 
         return match describe_table_response {
-            Ok(output) => Ok(true),
+            Ok(_) => Ok(true),
             Err(ServiceError { err: DescribeTableError { kind: ResourceNotFoundException(_) , .. }, raw: _ })  => Ok(false),
             Err(error) => Err(error.to_string()),
         }
