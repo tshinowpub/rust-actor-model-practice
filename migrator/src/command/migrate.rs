@@ -7,8 +7,11 @@ use aws_sdk_dynamodb::model::{AttributeDefinition, KeySchemaElement, Provisioned
 use serde_json::Error;
 use aws_sdk_dynamodb::{Client, Credentials, Endpoint, Region};
 use aws_sdk_dynamodb::error::CreateTableError;
+use aws_sdk_dynamodb::error::DescribeTableError;
+use aws_sdk_dynamodb::error::DescribeTableErrorKind::ResourceNotFoundException;
 use aws_sdk_dynamodb::output::CreateTableOutput;
 use aws_sdk_dynamodb::types::SdkError;
+use aws_sdk_dynamodb::types::SdkError::ServiceError;
 use http::Uri;
 
 use crate::command::{Command, ExitCode, Output};
@@ -148,7 +151,7 @@ impl Migrate {
         }
     }
 
-    async fn exists_table(self, table_name: &str) -> bool {
+    async fn exists_table(self, table_name: &str) -> result::Result<bool, String> {
         let client = self.create_client();
 
         let describe_table_response = client
@@ -157,7 +160,11 @@ impl Migrate {
             .send()
             .await;
 
-        false
+        return match describe_table_response {
+            Ok(output) => Ok(true),
+            Err(ServiceError { err: DescribeTableError { kind: ResourceNotFoundException(_) , .. }, raw: _ })  => Ok(false),
+            Err(error) => Err(error.to_string()),
+        }
     }
 
     async fn create_migration_table(self) -> result::Result<(), String> {
@@ -174,11 +181,16 @@ impl Migrate {
 
                     let query = self.read_contents(&migration_file).unwrap();
 
-                    if self.exists_table(query.table_name()).await == true { return Ok(()) }
+                    match self.exists_table(query.table_name()).await {
+                        Ok(true) => return Ok(()),
+                        Ok(false) => {
+                            let create_table_result = self.create_table(query.table_name(),&query).await;
 
-                    let create_table_result = self.create_table(query.table_name(),&query).await;
+                            if let Err(error) = create_table_result { return Err(error.to_string()) }
+                        },
+                        Err(message) => return Err(message.to_string()),
+                    }
 
-                    if let Err(error) = create_table_result { return Err(error.to_string()) }
                 }
             },
             _ => return Err("Cannot read migration files.".to_string()),
