@@ -1,6 +1,3 @@
-use aws_config::SdkConfig;
-use aws_sdk_dynamodb::{Credentials, Region};
-
 use crate::command::list::List;
 use crate::command::{Command, ExitCode, Output};
 use crate::command::migrate::Migrate;
@@ -14,8 +11,6 @@ pub struct Executor {}
  */
 impl Executor {
     pub async fn execute(self, command_name: &String, arguments: &Vec<String>, options: &Options) -> Output {
-        let default_provider = Credentials::new("test", "test", None, None, "local");
-
         let result= self.find_by_command_name(command_name);
 
         let output: Output;

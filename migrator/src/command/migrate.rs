@@ -2,7 +2,6 @@ use async_trait::async_trait;
 use std::{env, fs, result};
 use std::fs::File;
 use std::io::{Read, Result};
-use std::ops::Index;
 use std::path::PathBuf;
 use aws_sdk_dynamodb::model::{AttributeDefinition, KeySchemaElement, ProvisionedThroughput};
 use serde_json::Error;
