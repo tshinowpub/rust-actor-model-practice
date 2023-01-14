@@ -40,17 +40,17 @@ impl Migrate {
         }
     }
 
-    fn read_migration_files(&self, current_path: PathBuf) -> result::Result<Vec<PathBuf>, &str> {
+    fn read_migration_files(&self, current_path: PathBuf) -> result::Result<Vec<PathBuf>, String> {
         let mut migration_files: Vec<PathBuf> = Vec::new();
 
-        let result = fs::read_dir(current_path);
+        let result = fs::read_dir(&current_path);
         match result {
             Ok(directory) => {
                 for file in directory.into_iter() {
                     migration_files.push(file.expect("").path());
                 }
             },
-            _ => return Err("aaaa"),
+            _ => return Err(format!("Cannot read directory. path: {}", current_path.to_str().unwrap_or("cannot resolve path."))),
         }
 
         Ok(migration_files)
@@ -185,7 +185,7 @@ impl Migrate {
 
                 }
             },
-            _ => return Err("Cannot read migration files.".to_string()),
+            Err(message) => return Err(message),
         }
 
         Ok(())
