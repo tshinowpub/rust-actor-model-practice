@@ -15,7 +15,13 @@ impl List {
 #[async_trait]
 impl Command for List {
     async fn execute(&self, arguments: &Vec<String>, options: &Options) -> Output {
-        Output::new(ExitCode::SUCCEED, "List !!!".to_string())
+        let message = "Usage:  migrator [Command] [Option] \n
+        Options:
+            list    Display command list.
+            migrate Execute migration..
+        ";
+
+        Output::new(ExitCode::SUCCEED, message.to_string())
     }
 
     fn command_name(self) -> &'static str {
