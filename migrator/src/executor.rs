@@ -16,13 +16,7 @@ impl Executor {
     pub async fn execute(self, command_name: &String, arguments: &Vec<String>, options: &Options) -> Output {
         let default_provider = Credentials::new("test", "test", None, None, "local");
 
-        let config = aws_config::from_env()
-            .credentials_provider(default_provider)
-            .region(Region::new("ap-northeast-1"))
-            .load()
-            .await;
-
-        let result= self.find_by_command_name(command_name, &config);
+        let result= self.find_by_command_name(command_name);
 
         let output: Output;
         match result {
@@ -37,7 +31,7 @@ impl Executor {
         output
     }
 
-    fn find_by_command_name<'a>(self, command_name: &'a String, config: &'a SdkConfig) -> Result<Box<dyn Command>, &'a str> {
+    fn find_by_command_name<'a>(self, command_name: &'a String) -> Result<Box<dyn Command>, &'a str> {
         let migrate = Migrate::new();
         let list = List::new();
 
