@@ -17,6 +17,7 @@ use http::Uri;
 use crate::command::{Command, ExitCode, Output};
 use crate::clients::dynamodb_client;
 use crate::clients::dynamodb_client::DynamodbClient;
+use crate::clients::dynamodb_client_factory::DynamodbClientFactory;
 use crate::command::migration_query::MigrationQuery;
 use crate::lexer::option_lexer::Options;
 
@@ -60,7 +61,7 @@ impl Migrate {
     fn read_contents(self, path: &PathBuf) -> result::Result<MigrationQuery, &str> {
         let mut migration_contents = String::new();
 
-        let mut migration_file = File::open(path);
+        let migration_file = File::open(path);
         match migration_file {
             Ok(mut target_file) => {
                 if target_file.read_to_string(&mut migration_contents).is_ok() {
@@ -199,16 +200,7 @@ impl Migrate {
         Ok(())
     }
 
-    fn create_client(self) -> Client {
-        let endpoint = Endpoint::immutable(Uri::from_static("http://localhost:8000"));
-        let dynamodb_local_config = aws_sdk_dynamodb::Config::builder()
-            .region(Region::new("ap-northeast-1"))
-            .endpoint_resolver(endpoint)
-            .credentials_provider(Credentials::new("test", "test", None, None, "default"))
-            .build();
-
-        Client::from_conf(dynamodb_local_config)
-    }
+    fn create_client(self) -> Client { DynamodbClientFactory::factory() }
 }
 
 #[async_trait]

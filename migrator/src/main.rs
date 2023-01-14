@@ -3,7 +3,6 @@ use std::process::exit;
 use crate::command::{ExitCode, Output};
 
 mod command;
-mod config;
 mod executor;
 mod extractor;
 mod clients;
