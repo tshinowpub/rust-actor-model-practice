@@ -1,7 +1,5 @@
 use aws_config::SdkConfig;
-use aws_sdk_dynamodb as dynamodb;
 use aws_sdk_dynamodb::{Credentials, Region};
-use crate::clients::dynamodb_client::DynamodbClient;
 
 use crate::command::list::List;
 use crate::command::{Command, ExitCode, Output};
@@ -40,7 +38,7 @@ impl Executor {
     }
 
     fn find_by_command_name<'a>(self, command_name: &'a String, config: &'a SdkConfig) -> Result<Box<dyn Command>, &'a str> {
-        let migrate = Migrate::new(DynamodbClient::new(dynamodb::Client::new(config)));
+        let migrate = Migrate::new();
         let list = List::new();
 
         let command: Box<dyn Command>;

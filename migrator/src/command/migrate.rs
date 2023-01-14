@@ -14,8 +14,6 @@ use aws_sdk_dynamodb::types::SdkError;
 use aws_sdk_dynamodb::types::SdkError::ServiceError;
 
 use crate::command::{Command, ExitCode, Output};
-use crate::clients::dynamodb_client;
-use crate::clients::dynamodb_client::DynamodbClient;
 use crate::clients::dynamodb_client_factory::DynamodbClientFactory;
 use crate::command::migration_query::MigrationQuery;
 use crate::lexer::option_lexer::Options;
@@ -27,7 +25,7 @@ pub struct Migrate {
 }
 
 impl Migrate {
-    pub fn new(dynamodb_client: DynamodbClient) -> Self {
+    pub fn new() -> Self {
         Self {}
     }
 
