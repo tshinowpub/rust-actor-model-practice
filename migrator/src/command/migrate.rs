@@ -222,11 +222,13 @@ impl Migrate {
         match self.read_migration_files(migration_dir) {
             Ok(target_files) => {
                 for migration_file in target_files {
-                    println!("target path.: {}", migration_file.to_str().unwrap());
+                    println!("Run: {}", migration_file.to_str().unwrap());
 
                     let migration_data = self.read_user_contents(&migration_file).unwrap();
 
-                    self.execute_user_migration(migration_data);
+                    let output = self.execute_user_migration(migration_data);
+
+                    println!("{}", String::from_utf8(output.stdout).unwrap_or("".to_string()))
                 }
             },
             Err(message) => return Err(message),
@@ -238,15 +240,15 @@ impl Migrate {
     fn execute_user_migration(self, migration_data: String) -> ProcessOutput {
         let output = if cfg!(target_os = "windows") {
             ProcessCommand::new("cmd")
-                .args(["/C", "echo hello!!!"])
+                .args(["/C", "echo Run Windows migration command."])
                 .output()
-                .expect("failed to execute process")
+                .expect("failed to execute process on Windows.")
         } else {
             ProcessCommand::new("sh")
                 .arg("-c")
-                .arg("echo hello!!!")
+                .arg("echo echo Run Linux migration command.")
                 .output()
-                .expect("failed to execute process")
+                .expect("failed to execute process on Linux.")
         };
 
         output
