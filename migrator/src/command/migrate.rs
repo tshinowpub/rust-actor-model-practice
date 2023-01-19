@@ -1,5 +1,7 @@
 use async_trait::async_trait;
 use std::{env, fs, result};
+use std::process::Command as ProcessCommand;
+use std::process::Output as ProcessOutput;
 use std::fs::File;
 use std::io::{Read, Result};
 use std::path::PathBuf;
@@ -19,6 +21,7 @@ use crate::command::migration_query::MigrationQuery;
 use crate::lexer::option_lexer::Options;
 
 const RESOURCE_FILE_DIR: &str = "resource";
+const DEFAULT_MIGRATION_FILE_PATH: &str = "migrations";
 
 #[derive(Debug, Copy, Clone)]
 pub struct Migrate {
@@ -35,6 +38,17 @@ impl Migrate {
         match current_dir {
             Ok(path) => Ok(path.join("src").join(RESOURCE_FILE_DIR)),
             _ => current_dir,
+        }
+    }
+
+    fn resolve_user_migration_dir(self, options: &Options) -> PathBuf {
+        dbg!(options);
+
+        let path = options.get("path").unwrap_or(&None);
+
+        return match path {
+            Some(directory) => PathBuf::from(directory),
+            None                    => PathBuf::from(DEFAULT_MIGRATION_FILE_PATH),
         }
     }
 
@@ -65,6 +79,22 @@ impl Migrate {
                         Ok(query) => Ok(query),
                         _ => Err("Cannot parse json file.")
                     }
+                }
+
+                Err("Cannot load migration contents. File name: ")
+            },
+            _ => Err("Cannot read migration file.")
+        }
+    }
+
+    fn read_user_contents(self, path: &PathBuf) -> result::Result<String, &str> {
+        let mut migration_contents = String::new();
+
+        let migration_file = File::open(path);
+        match migration_file {
+            Ok(mut target_file) => {
+                if target_file.read_to_string(&mut migration_contents).is_ok() {
+                    return Ok(migration_contents);
                 }
 
                 Err("Cannot load migration contents. File name: ")
@@ -188,6 +218,40 @@ impl Migrate {
         Ok(())
     }
 
+    async fn create_user_migration_table(self, migration_dir: PathBuf) -> result::Result<(), String> {
+        match self.read_migration_files(migration_dir) {
+            Ok(target_files) => {
+                for migration_file in target_files {
+                    println!("target path.: {}", migration_file.to_str().unwrap());
+
+                    let migration_data = self.read_user_contents(&migration_file).unwrap();
+
+                    self.execute_user_migration(migration_data);
+                }
+            },
+            Err(message) => return Err(message),
+        }
+
+        Ok(())
+    }
+
+    fn execute_user_migration(self, migration_data: String) -> ProcessOutput {
+        let output = if cfg!(target_os = "windows") {
+            ProcessCommand::new("cmd")
+                .args(["/C", "echo hello!!!"])
+                .output()
+                .expect("failed to execute process")
+        } else {
+            ProcessCommand::new("sh")
+                .arg("-c")
+                .arg("echo hello!!!")
+                .output()
+                .expect("failed to execute process")
+        };
+
+        output
+    }
+
     fn create_client(self) -> Client { DynamodbClientFactory::factory() }
 
     fn help(self) -> &'static str {
@@ -207,6 +271,12 @@ impl Command for Migrate {
         }
 
         let result = self.create_migration_table().await;
+        if let Err(message) = result {
+            return Output::new(ExitCode::FAILED, message)
+        }
+
+        let user_migration_file_path = self.resolve_user_migration_dir(options);
+        let result = self.create_user_migration_table(user_migration_file_path).await;
         if let Err(message) = result {
             return Output::new(ExitCode::FAILED, message)
         }
