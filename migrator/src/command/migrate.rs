@@ -1,12 +1,4 @@
 use async_trait::async_trait;
-use std::{env, fs, result};
-use std::process::Command as ProcessCommand;
-use std::process::Output as ProcessOutput;
-use std::fs::File;
-use std::io::{Read, Result};
-use std::path::PathBuf;
-use aws_sdk_dynamodb::model::{AttributeDefinition, KeySchemaElement, ProvisionedThroughput};
-use serde_json::Error;
 use aws_sdk_dynamodb::Client;
 use aws_sdk_dynamodb::error::CreateTableError;
 use aws_sdk_dynamodb::error::DescribeTableError;
@@ -14,11 +6,19 @@ use aws_sdk_dynamodb::error::DescribeTableErrorKind::ResourceNotFoundException;
 use aws_sdk_dynamodb::output::CreateTableOutput;
 use aws_sdk_dynamodb::types::SdkError;
 use aws_sdk_dynamodb::types::SdkError::ServiceError;
+use aws_sdk_dynamodb::model::{AttributeDefinition, KeySchemaElement, ProvisionedThroughput};
+use std::{env, fs, result};
+use std::process::Command as ProcessCommand;
+use std::process::Output as ProcessOutput;
+use std::fs::File;
+use std::io::{Read, Result};
+use std::path::PathBuf;
+use serde_json::Error;
 
 use crate::command::{Command, ExitCode, Output};
 use crate::clients::dynamodb_client_factory::DynamodbClientFactory;
+use crate::command::migrate_type::MigrateType;
 use crate::command::migration_query::MigrationQuery;
-use crate::lexer::option_lexer::Options;
 
 const RESOURCE_FILE_DIR: &str = "resource";
 const DEFAULT_MIGRATION_FILE_PATH: &str = "migrations";
@@ -41,14 +41,12 @@ impl Migrate {
         }
     }
 
-    fn resolve_user_migration_dir(self, options: &Options) -> PathBuf {
-        dbg!(options);
+    fn resolve_user_migration_dir(self, args: &Vec<String>) -> PathBuf {
+        let index = args.iter().position(|v| v == "-path");
 
-        let path = options.get("path").unwrap_or(&None);
-
-        return match path {
-            Some(directory) => PathBuf::from(directory),
-            None                    => PathBuf::from(DEFAULT_MIGRATION_FILE_PATH),
+        return match args.iter().nth(index.unwrap() + 1) {
+            Some(migration_path) => PathBuf::from(migration_path),
+            _                            => PathBuf::from(DEFAULT_MIGRATION_FILE_PATH),
         }
     }
 
@@ -218,13 +216,23 @@ impl Migrate {
         Ok(())
     }
 
-    async fn create_user_migration_table(self, migration_dir: PathBuf) -> result::Result<(), String> {
+    async fn migrate(self, migrate_type: MigrateType, migration_dir: PathBuf) -> result::Result<(), String> {
         match self.read_migration_files(migration_dir) {
             Ok(target_files) => {
                 for migration_file in target_files {
+                    if migrate_type.is_up() && !migration_file.to_str().unwrap().contains(".up.") {
+                        continue;
+                    }
+
+                    if migrate_type.is_down() && !migration_file.to_str().unwrap().contains(".down.") {
+                        continue;
+                    }
+
                     println!("Run: {}", migration_file.to_str().unwrap());
 
                     let migration_data = self.read_user_contents(&migration_file).unwrap();
+
+                    dbg!(migration_data.as_str());
 
                     let output = self.execute_user_migration(migration_data);
 
@@ -240,7 +248,7 @@ impl Migrate {
     fn execute_user_migration(self, migration_data: String) -> ProcessOutput {
         let output = if cfg!(target_os = "windows") {
             ProcessCommand::new("cmd")
-                .args(["/C", "echo Run Windows migration command."])
+                .args(["/C", migration_data.as_str()])
                 .output()
                 .expect("failed to execute process on Windows.")
         } else {
@@ -267,8 +275,8 @@ impl Migrate {
 
 #[async_trait]
 impl Command for Migrate {
-    async fn execute(&self, arguments: &Vec<String>, options: &Options) -> Output {
-        if let Some(_) = options.get("help") {
+    async fn execute(&self, args: &Vec<String>) -> Output {
+        if args.contains(&"--help".to_string()) {
             return Output::new(ExitCode::SUCCEED, self.help().to_string());
         }
 
@@ -277,8 +285,8 @@ impl Command for Migrate {
             return Output::new(ExitCode::FAILED, message)
         }
 
-        let user_migration_file_path = self.resolve_user_migration_dir(options);
-        let result = self.create_user_migration_table(user_migration_file_path).await;
+        let user_migration_file_path = self.resolve_user_migration_dir(args);
+        let result = self.migrate(MigrateType::Up, user_migration_file_path).await;
         if let Err(message) = result {
             return Output::new(ExitCode::FAILED, message)
         }
@@ -290,3 +298,4 @@ impl Command for Migrate {
         "migrate"
     }
 }
+

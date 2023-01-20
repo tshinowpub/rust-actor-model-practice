@@ -1,7 +1,6 @@
 use crate::command::list::List;
 use crate::command::{Command, ExitCode, Output};
 use crate::command::migrate::Migrate;
-use crate::lexer::option_lexer::Options;
 
 #[derive(Default)]
 pub struct Executor {}
@@ -10,20 +9,11 @@ pub struct Executor {}
  * https://github.com/awslabs/aws-sdk-rust/issues/425#issuecomment-1020265854
  */
 impl Executor {
-    pub async fn execute(self, command_name: &String, arguments: &Vec<String>, options: &Options) -> Output {
-        let result= self.find_by_command_name(command_name);
-
-        let output: Output;
-        match result {
-            Ok(command) => {
-                output = command.execute(arguments, options).await;
-            },
-            Err(_) => {
-                output = Output::new(ExitCode::FAILED, format!("Command {} was not found.", command_name))
-            },
+    pub async fn execute(self, command_name: &String, args: &Vec<String>) -> Output {
+        match self.find_by_command_name(command_name) {
+            Ok(command) => command.execute(args).await,
+            Err(_)                       => Output::new(ExitCode::FAILED, format!("Command {} was not found.", command_name)),
         }
-
-        output
     }
 
     fn find_by_command_name<'a>(self, command_name: &'a String) -> Result<Box<dyn Command>, &'a str> {

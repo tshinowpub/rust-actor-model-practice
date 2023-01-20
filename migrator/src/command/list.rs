@@ -1,7 +1,6 @@
 use async_trait::async_trait;
 
 use crate::command::{Command, ExitCode, Output};
-use crate::lexer::option_lexer::Options;
 
 #[derive(Debug, Copy, Clone)]
 pub struct List {}
@@ -14,7 +13,7 @@ impl List {
 
 #[async_trait]
 impl Command for List {
-    async fn execute(&self, arguments: &Vec<String>, options: &Options) -> Output {
+    async fn execute(&self, arguments: &Vec<String>) -> Output {
         let message = "Usage:  migrator [Command] [Option] \n
         Options:
             list    Display command list.
