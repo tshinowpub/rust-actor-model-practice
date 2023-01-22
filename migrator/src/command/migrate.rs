@@ -1,4 +1,3 @@
-use async_trait::async_trait;
 use aws_sdk_dynamodb::Client;
 use aws_sdk_dynamodb::error::CreateTableError;
 use aws_sdk_dynamodb::error::DescribeTableError;
