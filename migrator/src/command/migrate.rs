@@ -249,7 +249,9 @@ impl Migrate {
 
     fn execute_user_migration(self, migration_data: String) -> ProcessOutput {
         let output = if cfg!(target_os = "windows") {
-            let value = migration_data.replace("\\\n", "");
+            let value = migration_data.replace("\n", "");
+
+            dbg!(&value);
 
             ProcessCommand::new("cmd")
                 .args(["/C", value.as_str()])
