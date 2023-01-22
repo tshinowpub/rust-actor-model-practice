@@ -6,10 +6,9 @@ use crate::command::migrate_type::MigrateType;
 
 use crate::command::{Command, Output};
 use crate::command::migrate::Migrate as MigrateCommand;
-use crate::executor::Executor;
+use crate::command::list::List as ListCommand;
 
 mod command;
-mod executor;
 mod clients;
 
 #[derive(Parser, Debug)]
@@ -48,17 +47,29 @@ async fn main() {
 
     match &cli.command {
         Some(Commands::Migrate { command, path}) => {
-            let migrate = MigrateCommand::new();
+            let command = MigrateCommand::new();
 
-            let output = migrate.execute(MigrateType::Up, None).await;
+            let output = command.execute(MigrateType::Up, None).await;
 
             println!("{}", output.message());
 
             exit(*(output.exit_code()) as i32);
         },
         Some(Commands::List {}) => {
-            println!("Called list!!!");
+            let command = ListCommand::new();
+
+            let output = command.execute().await;
+
+            println!("{}", output.message());
+
+            exit(*(output.exit_code()) as i32);
         },
-        None => {}
+        None => {
+            if let Some(name) = cli.name.as_deref() {
+                println!("Command {} was not found.", name);
+            }
+
+            exit(0)
+        }
     }
 }

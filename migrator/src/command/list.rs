@@ -9,11 +9,8 @@ impl List {
     pub fn new() -> Self {
         Self {}
     }
-}
 
-#[async_trait]
-impl Command for List {
-    async fn execute(&self, arguments: &Vec<String>) -> Output {
+    pub async fn execute(self) -> Output {
         let message = "Usage:  migrator [Command] [Option] \n
         Options:
             list    Display command list.
@@ -21,9 +18,5 @@ impl Command for List {
         ";
 
         Output::new(ExitCode::SUCCEED, message.to_string())
-    }
-
-    fn command_name(self) -> &'static str {
-        "list"
     }
 }

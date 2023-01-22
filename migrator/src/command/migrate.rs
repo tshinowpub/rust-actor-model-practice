@@ -269,7 +269,7 @@ impl Migrate {
         "
     }
 
-    pub async fn execute(&self, command: MigrateType, migrate_path: Option<PathBuf>) -> Output {
+    pub async fn execute(self, command: MigrateType, migrate_path: Option<PathBuf>) -> Output {
         let result = self.create_migration_table().await;
         if let Err(message) = result {
             return Output::new(ExitCode::FAILED, format!("Migration failed. : {}", message))
