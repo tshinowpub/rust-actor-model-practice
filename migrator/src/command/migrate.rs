@@ -282,16 +282,16 @@ impl Command for Migrate {
 
         let result = self.create_migration_table().await;
         if let Err(message) = result {
-            return Output::new(ExitCode::FAILED, message)
+            return Output::new(ExitCode::FAILED, format!("Migration failed. : {}", message))
         }
 
         let user_migration_file_path = self.resolve_user_migration_dir(args);
         let result = self.migrate(MigrateType::Up, user_migration_file_path).await;
         if let Err(message) = result {
-            return Output::new(ExitCode::FAILED, message)
+            return Output::new(ExitCode::FAILED, format!("Migration failed. : {}", message))
         }
 
-        Output::new(ExitCode::SUCCEED, "Migrate command succeed.".to_string())
+        Output::new(ExitCode::SUCCEED, "Migrate succeed.".to_string())
     }
 
     fn command_name(self) -> &'static str {
