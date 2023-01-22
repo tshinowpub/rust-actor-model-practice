@@ -206,7 +206,7 @@ impl Migrate {
         Ok(())
     }
 
-    async fn migrate(self, migrate_type: MigrateType, migration_dir: PathBuf) -> result::Result<(), String> {
+    async fn migrate(self, migrate_type: &MigrateType, migration_dir: PathBuf) -> result::Result<(), String> {
         match self.read_migration_files(migration_dir) {
             Ok(target_files) => {
                 for migration_file in target_files {
@@ -260,15 +260,7 @@ impl Migrate {
 
     fn create_client(self) -> Client { DynamodbClientFactory::factory() }
 
-    fn help(self) -> &'static str {
-        "Usage:  migrator [OPTIONS] Command \n
-        Options:
-            -f     Migration file path.
-            --help Display help.
-        "
-    }
-
-    pub async fn execute(self, command: MigrateType, migrate_path: &Option<PathBuf>) -> Output {
+    pub async fn execute(self, command: &MigrateType, migrate_path: &Option<PathBuf>) -> Output {
         let result = self.create_migration_table().await;
         if let Err(message) = result {
             return Output::new(ExitCode::FAILED, format!("Migration failed. : {}", message))
@@ -279,7 +271,7 @@ impl Migrate {
             None                => PathBuf::from(DEFAULT_MIGRATION_FILE_PATH)
         };
 
-        let result = self.migrate(MigrateType::Up, user_migration_file_path).await;
+        let result = self.migrate(command, user_migration_file_path).await;
         if let Err(message) = result {
             return Output::new(ExitCode::FAILED, format!("Migration failed. : {}", message))
         }

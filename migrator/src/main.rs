@@ -1,10 +1,9 @@
 use clap::{Parser, Subcommand};
-use std::env;
+
 use std::path::PathBuf;
 use std::process::exit;
 use crate::command::migrate_type::MigrateType;
 
-use crate::command::Output;
 use crate::command::migrate::Migrate as MigrateCommand;
 use crate::command::list::List as ListCommand;
 
@@ -14,7 +13,6 @@ mod clients;
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Cli {
-    /// Optional name to operate on
     name: Option<String>,
 
     #[command(subcommand)]
@@ -49,7 +47,7 @@ async fn main() {
         Some(Commands::Migrate { command, path}) => {
             let migrate = MigrateCommand::new();
 
-            let output = migrate.execute(MigrateType::Up, path).await;
+            let output = migrate.execute(command, path).await;
 
             println!("{}", output.message());
 
