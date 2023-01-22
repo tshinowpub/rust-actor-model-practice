@@ -1,31 +1,64 @@
+use clap::{Parser, Subcommand};
 use std::env;
+use std::path::PathBuf;
 use std::process::exit;
-use crate::command::{ExitCode, Output};
+use crate::command::migrate_type::MigrateType;
+
+use crate::command::{Command, Output};
+use crate::command::migrate::Migrate as MigrateCommand;
+use crate::executor::Executor;
 
 mod command;
 mod executor;
 mod clients;
 
-use crate::executor::Executor;
+#[derive(Parser, Debug)]
+#[command(author, version, about, long_about = None)]
+struct Cli {
+    /// Optional name to operate on
+    name: Option<String>,
+
+    #[command(subcommand)]
+    command: Option<Commands>,
+}
+
+#[derive(Subcommand, Debug)]
+enum Commands {
+    Migrate {
+        command: String,
+
+        #[arg(short, long, required=false)]
+        path: Option<PathBuf>,
+    },
+    List {
+    }
+}
 
 #[tokio::main]
 async fn main() {
-    let args_for_command :Vec<String> = env::args().skip(1).collect();
-    let command_args :Vec<String> = env::args().skip(2).collect();
+    let cli = Cli::parse();
 
-    let executor = Executor::default();
+    dbg!("{:?}", &cli);
 
-    let output: Output;
-    match (args_for_command.first(), command_args) {
-        (Some(command), args) => output = executor.execute(command, &args).await,
-        _                                        => {
-            let args: Vec<String> = Vec::new();
-
-            output = executor.execute(&"list".to_string(), &args).await
-        },
+    if let Some(name) = cli.name.as_deref() {
+        println!("Value for name: {}", name);
     }
 
-    println!("{}", output.message());
+    dbg!("{}", &cli.command);
 
-    exit(*(output.exit_code()) as i32);
+    match &cli.command {
+        Some(Commands::Migrate { command, path}) => {
+            let migrate = MigrateCommand::new();
+
+            let output = migrate.execute(MigrateType::Up, None).await;
+
+            println!("{}", output.message());
+
+            exit(*(output.exit_code()) as i32);
+        },
+        Some(Commands::List {}) => {
+            println!("Called list!!!");
+        },
+        None => {}
+    }
 }

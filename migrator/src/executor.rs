@@ -22,7 +22,6 @@ impl Executor {
 
         let command: Box<dyn Command>;
         match command_name {
-            _ if (command_name == migrate.command_name()) => command = Box::new(migrate),
             _ if (command_name == list.command_name())    => command = Box::new(list),
             _                                             => {
                 return Err(stringify!("Cannot resolve command_name. Command name {}.", command_name))

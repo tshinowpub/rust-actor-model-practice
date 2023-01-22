@@ -41,19 +41,6 @@ impl Migrate {
         }
     }
 
-    fn resolve_user_migration_dir(self, args: &Vec<String>) -> PathBuf {
-        let index = args.iter().position(|v| v == "-path");
-
-        if index == None {
-            return PathBuf::from(DEFAULT_MIGRATION_FILE_PATH);
-        }
-
-        return match args.iter().nth(index.unwrap() + 1) {
-            Some(migration_path) => PathBuf::from(migration_path),
-            _                    => PathBuf::from(DEFAULT_MIGRATION_FILE_PATH),
-        }
-    }
-
     fn read_migration_files(&self, current_path: PathBuf) -> result::Result<Vec<PathBuf>, String> {
         let mut migration_files: Vec<PathBuf> = Vec::new();
 
@@ -247,7 +234,11 @@ impl Migrate {
         Ok(())
     }
 
+    #[cfg(target_os = "windows")]
     fn execute_user_migration(self, migration_data: String) -> ProcessOutput {
+        dbg!(std::env::consts::OS);
+
+
         let output = if cfg!(target_os = "windows") {
             let value = migration_data.replace("\n", "");
 
@@ -277,21 +268,14 @@ impl Migrate {
             --help Display help.
         "
     }
-}
 
-#[async_trait]
-impl Command for Migrate {
-    async fn execute(&self, args: &Vec<String>) -> Output {
-        if args.contains(&"--help".to_string()) {
-            return Output::new(ExitCode::SUCCEED, self.help().to_string());
-        }
-
+    pub async fn execute(&self, command: MigrateType, migrate_path: Option<PathBuf>) -> Output {
         let result = self.create_migration_table().await;
         if let Err(message) = result {
             return Output::new(ExitCode::FAILED, format!("Migration failed. : {}", message))
         }
 
-        let user_migration_file_path = self.resolve_user_migration_dir(args);
+        let user_migration_file_path = migrate_path.unwrap_or(PathBuf::from(DEFAULT_MIGRATION_FILE_PATH));
         let result = self.migrate(MigrateType::Up, user_migration_file_path).await;
         if let Err(message) = result {
             return Output::new(ExitCode::FAILED, format!("Migration failed. : {}", message))
@@ -299,9 +283,4 @@ impl Command for Migrate {
 
         Output::new(ExitCode::SUCCEED, "Migrate succeed.".to_string())
     }
-
-    fn command_name(self) -> &'static str {
-        "migrate"
-    }
 }
-
