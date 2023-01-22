@@ -44,9 +44,13 @@ impl Migrate {
     fn resolve_user_migration_dir(self, args: &Vec<String>) -> PathBuf {
         let index = args.iter().position(|v| v == "-path");
 
+        if index == None {
+            return PathBuf::from(DEFAULT_MIGRATION_FILE_PATH);
+        }
+
         return match args.iter().nth(index.unwrap() + 1) {
             Some(migration_path) => PathBuf::from(migration_path),
-            _                            => PathBuf::from(DEFAULT_MIGRATION_FILE_PATH),
+            _                    => PathBuf::from(DEFAULT_MIGRATION_FILE_PATH),
         }
     }
 
