@@ -15,7 +15,7 @@ use std::io::{Read, Result};
 use std::path::PathBuf;
 use serde_json::Error;
 
-use crate::command::{Command, ExitCode, Output};
+use crate::command::{ExitCode, Output};
 use crate::clients::dynamodb_client_factory::DynamodbClientFactory;
 use crate::command::migrate_type::MigrateType;
 use crate::command::migration_query::MigrationQuery;
@@ -269,13 +269,17 @@ impl Migrate {
         "
     }
 
-    pub async fn execute(self, command: MigrateType, migrate_path: Option<PathBuf>) -> Output {
+    pub async fn execute(self, command: MigrateType, migrate_path: &Option<PathBuf>) -> Output {
         let result = self.create_migration_table().await;
         if let Err(message) = result {
             return Output::new(ExitCode::FAILED, format!("Migration failed. : {}", message))
         }
 
-        let user_migration_file_path = migrate_path.unwrap_or(PathBuf::from(DEFAULT_MIGRATION_FILE_PATH));
+        let user_migration_file_path = match migrate_path {
+            Some(path) => path.to_path_buf(),
+            None                => PathBuf::from(DEFAULT_MIGRATION_FILE_PATH)
+        };
+
         let result = self.migrate(MigrateType::Up, user_migration_file_path).await;
         if let Err(message) = result {
             return Output::new(ExitCode::FAILED, format!("Migration failed. : {}", message))

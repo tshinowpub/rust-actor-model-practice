@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 
-use crate::command::{Command, ExitCode, Output};
+use crate::command::{ExitCode, Output};
 
 #[derive(Debug, Copy, Clone)]
 pub struct List {}

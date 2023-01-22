@@ -4,7 +4,7 @@ use std::path::PathBuf;
 use std::process::exit;
 use crate::command::migrate_type::MigrateType;
 
-use crate::command::{Command, Output};
+use crate::command::Output;
 use crate::command::migrate::Migrate as MigrateCommand;
 use crate::command::list::List as ListCommand;
 
@@ -47,18 +47,18 @@ async fn main() {
 
     match &cli.command {
         Some(Commands::Migrate { command, path}) => {
-            let command = MigrateCommand::new();
+            let migrate = MigrateCommand::new();
 
-            let output = command.execute(MigrateType::Up, None).await;
+            let output = migrate.execute(MigrateType::Up, path).await;
 
             println!("{}", output.message());
 
             exit(*(output.exit_code()) as i32);
         },
         Some(Commands::List {}) => {
-            let command = ListCommand::new();
+            let list = ListCommand::new();
 
-            let output = command.execute().await;
+            let output = list.execute().await;
 
             println!("{}", output.message());
 

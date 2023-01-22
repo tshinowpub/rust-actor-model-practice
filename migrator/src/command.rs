@@ -1,16 +1,7 @@
-use async_trait::async_trait;
-
 pub mod migrate;
 pub mod migration_query;
 pub mod migrate_type;
 pub mod list;
-
-#[async_trait]
-pub trait Command {
-    async fn execute(&self, arguments: &Vec<String>) -> Output;
-
-    fn command_name(self) -> &'static str;
-}
 
 #[derive(Debug, Clone)]
 pub struct Output {
