@@ -24,9 +24,9 @@ struct Cli {
 #[derive(Subcommand, Debug)]
 enum Commands {
     Migrate {
-        command: String,
+        command: MigrateType,
 
-        #[arg(short, long, required=false)]
+        #[arg(short, long, required = false)]
         path: Option<PathBuf>,
     },
     List {
