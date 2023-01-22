@@ -236,8 +236,6 @@ impl Migrate {
 
                     let migration_data = self.read_user_contents(&migration_file).unwrap();
 
-                    dbg!(migration_data.as_str());
-
                     let output = self.execute_user_migration(migration_data);
 
                     println!("{}", String::from_utf8(output.stdout).unwrap_or("".to_string()))
@@ -251,14 +249,16 @@ impl Migrate {
 
     fn execute_user_migration(self, migration_data: String) -> ProcessOutput {
         let output = if cfg!(target_os = "windows") {
+            let value = migration_data.replace("\\\n", "");
+
             ProcessCommand::new("cmd")
-                .args(["/C", migration_data.as_str()])
+                .args(["/C", value.as_str()])
                 .output()
                 .expect("failed to execute process on Windows.")
         } else {
             ProcessCommand::new("sh")
                 .arg("-c")
-                .arg("echo echo Run Linux migration command.")
+                .arg(migration_data.as_str())
                 .output()
                 .expect("failed to execute process on Linux.")
         };
