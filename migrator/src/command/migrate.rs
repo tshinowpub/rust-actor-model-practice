@@ -102,10 +102,7 @@ impl Migrate {
 
         println!("TableName: {}", table_name);
 
-        let attribute_definitions = query.attribute_definitions();
-        let mapped_attribute_definitions = attribute_definitions.to_vec();
-
-        let vec_attribute_definitions = mapped_attribute_definitions.iter()
+        let vec_attribute_definitions = query.attribute_definitions().to_vec().iter()
             .map(|attribute_definition| (
                 AttributeDefinition::builder()
                     .attribute_name(attribute_definition.attribute_name()))
@@ -114,11 +111,7 @@ impl Migrate {
             )
             .collect::<Vec<_>>();
 
-        let key_schemas = query.key_schemas();
-
-        let mapped_key_schemas = key_schemas.to_vec();
-
-        let vec_key_schemas = mapped_key_schemas.iter()
+        let vec_key_schemas = query.key_schemas().to_vec().iter()
             .map(|key_schema| (
                 KeySchemaElement::builder()
                     .attribute_name(key_schema.attribute_name()))
@@ -134,9 +127,7 @@ impl Migrate {
             .write_capacity_units(*input_provisioned_throughput.write_capacity_units())
             .build();
 
-        let client = self.create_client();
-
-        let create_table_response = client
+        let create_table_response = self.create_client()
             .create_table()
             .table_name(table_name)
             .set_attribute_definitions(Some(vec_attribute_definitions))
@@ -160,9 +151,7 @@ impl Migrate {
     }
 
     async fn exists_table(self, table_name: &str) -> result::Result<bool, String> {
-        let client = self.create_client();
-
-        let describe_table_response = client
+        let describe_table_response = self.create_client()
             .describe_table()
             .table_name(table_name)
             .send()
@@ -260,8 +249,7 @@ impl Migrate {
     fn create_client(self) -> Client { DynamodbClientFactory::factory() }
 
     pub async fn execute(self, command: &MigrateType, migrate_path: &Option<PathBuf>) -> Output {
-        let result = self.create_migration_table().await;
-        if let Err(message) = result {
+        if let Err(message) = self.create_migration_table().await {
             return Output::new(ExitCode::FAILED, format!("Migration failed. : {}", message))
         }
 
@@ -270,8 +258,7 @@ impl Migrate {
             None                => PathBuf::from(DEFAULT_MIGRATION_FILE_PATH)
         };
 
-        let result = self.migrate(command, user_migration_file_path).await;
-        if let Err(message) = result {
+        if let Err(message) = self.migrate(command, user_migration_file_path).await {
             return Output::new(ExitCode::FAILED, format!("Migration failed. : {}", message))
         }
 
