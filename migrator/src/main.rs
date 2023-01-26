@@ -21,13 +21,22 @@ struct Cli {
 
 #[derive(Subcommand, Debug)]
 enum Commands {
+    /// Migrate DynamoDB script.
     Migrate {
         command: MigrateType,
 
         #[arg(short, long, required = false)]
         path: Option<PathBuf>,
     },
+    /// Display command list.
     List {
+    },
+    /// Create migrate file.
+    Create {
+    },
+    /// Reset migration.
+    Reset {
+
     }
 }
 
@@ -61,6 +70,12 @@ async fn main() {
             println!("{}", output.message());
 
             exit(*(output.exit_code()) as i32);
+        },
+        Some(Commands::Create {}) => {
+            exit(0)
+        },
+        Some(Commands::Reset {}) => {
+            exit(0)
         },
         None => {
             if let Some(name) = cli.name.as_deref() {
