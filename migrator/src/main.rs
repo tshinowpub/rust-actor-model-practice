@@ -6,6 +6,7 @@ use crate::command::migrate_type::MigrateType;
 
 use crate::command::migrate::Migrate as MigrateCommand;
 use crate::command::list::List as ListCommand;
+use crate::command::reset::Reset as ResetCommand;
 
 mod command;
 mod clients;
@@ -36,7 +37,6 @@ enum Commands {
     },
     /// Reset migration.
     Reset {
-
     }
 }
 
@@ -75,7 +75,13 @@ async fn main() {
             exit(0)
         },
         Some(Commands::Reset {}) => {
-            exit(0)
+            let reset = ResetCommand::new();
+
+            let output = reset.execute().await;
+
+            println!("{}", output.message());
+
+            exit(*(output.exit_code()) as i32);
         },
         None => {
             if let Some(name) = cli.name.as_deref() {

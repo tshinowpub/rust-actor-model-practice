@@ -237,7 +237,6 @@ impl Migrate {
     fn execute_user_migration(self, migration_data: String) -> ProcessOutput {
         dbg!(std::env::consts::OS);
 
-
         let output = if cfg!(target_os = "windows") {
             let value = migration_data.replace("\n", "");
 
