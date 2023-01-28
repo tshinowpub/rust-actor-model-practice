@@ -1,5 +1,6 @@
-use aws_sdk_dynamodb::error::ListTablesError;
+use aws_sdk_dynamodb::error::{DeleteTableError, ListTablesError};
 use aws_sdk_dynamodb::types::SdkError;
+use tokio_stream::StreamExt;
 use crate::clients::dynamodb_client_factory::DynamodbClientFactory;
 use crate::command::{ExitCode, Output};
 
@@ -14,14 +15,19 @@ impl Reset {
     pub async fn execute(self) -> Output {
         return match self.find_table_names().await {
             Ok(table_names) => {
-                println!("Table names:");
+                println!("Executing...");
                 println!("--------------------------------------");
-                for table_name in table_names {
-                    println!("{}", table_name)
+                let mut stream = tokio_stream::iter(table_names);
+                while let Some(name) = stream.next().await {
+                    let result = self.remove_table(&name).await;
+                    match result {
+                        Ok(_) => println!("Table {} was deleted...", name),
+                        Err(error) => println!("{}", error.to_string()),
+                    }
                 }
                 println!("--------------------------------------");
 
-                Output::new(ExitCode::SUCCEED, "Succeeded".to_string())
+                Output::new(ExitCode::SUCCEED, "Remove table was succeeded.".to_string())
             },
             Err(error) => Output::new(ExitCode::FAILED, format!("Reset failed. : {}", error)),
         }
@@ -33,7 +39,14 @@ impl Reset {
                 //@todo When there are more than 100 tables.
                 Ok(output.table_names().unwrap_or(&[]).to_vec())
             },
-            Err(aaa) => Err(aaa),
+            Err(error) => Err(error),
+        }
+    }
+
+    async fn remove_table(self, table_name: &str) -> Result<(), SdkError<DeleteTableError>> {
+        return match DynamodbClientFactory::factory().delete_table().table_name(table_name).send().await {
+            Ok(_output) => Ok(()),
+            Err(error) => Err(error),
         }
     }
 }
