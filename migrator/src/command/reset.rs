@@ -22,7 +22,7 @@ impl Reset {
                     let result = self.remove_table(&name).await;
                     match result {
                         Ok(_) => println!("Table {} was deleted...", name),
-                        Err(error) => println!("{}", error.to_string()),
+                        Err(error) => return Output::new(ExitCode::FAILED, format!("Remove table failed. {}", error.to_string())),
                     }
                 }
                 println!("--------------------------------------");
