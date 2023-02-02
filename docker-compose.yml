@@ -21,6 +21,29 @@ services:
     depends_on:
       - dynamodb
 
+  mysql:
+    container_name: mysql
+    image: mysql:8.0-debian
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      TZ: "Asia/Tokyo"
+    volumes:
+      - mysql:/data/mysql
+    command: mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_general_ci --sql_mode="STRICT_TRANS_TABLES"
+
+  mysql-admin:
+    container_name: mysql-admin
+    image: phpmyadmin/phpmyadmin:latest
+    ports:
+      - '8081:80'
+    depends_on:
+      - mysql
+    environment:
+      PMA_HOSTS: mysql
+
 volumes:
   dynamodb:
     driver: local
+  mysql:
