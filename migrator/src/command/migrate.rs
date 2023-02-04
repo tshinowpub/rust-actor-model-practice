@@ -9,15 +9,16 @@ use aws_sdk_dynamodb::model::{AttributeDefinition, KeySchemaElement, Provisioned
 use std::{env, fs, result};
 use std::process::Command as ProcessCommand;
 use std::process::Output as ProcessOutput;
-use std::fs::File;
 use std::io::{Read, Result};
 use std::path::PathBuf;
-use serde_json::Error;
+use config::Config;
+use sqlx::MySqlPool;
 
 use crate::command::{ExitCode, Output};
 use crate::clients::dynamodb_client_factory::DynamodbClientFactory;
 use crate::command::migrate_type::MigrateType;
 use crate::command::migration_query::MigrationQuery;
+use crate::settings::Settings;
 
 const RESOURCE_FILE_DIR: &str = "resource";
 const DEFAULT_MIGRATION_FILE_PATH: &str = "migrations";
@@ -59,7 +60,7 @@ impl Migrate {
     fn read_contents(self, path: &PathBuf) -> result::Result<MigrationQuery, &str> {
         let mut migration_contents = String::new();
 
-        let migration_file = File::open(path);
+        let migration_file = fs::File::open(path);
         match migration_file {
             Ok(mut target_file) => {
                 if target_file.read_to_string(&mut migration_contents).is_ok() {
@@ -78,7 +79,7 @@ impl Migrate {
     fn read_user_contents(self, path: &PathBuf) -> result::Result<String, &str> {
         let mut migration_contents = String::new();
 
-        let migration_file = File::open(path);
+        let migration_file = fs::File::open(path);
         match migration_file {
             Ok(mut target_file) => {
                 if target_file.read_to_string(&mut migration_contents).is_ok() {
@@ -91,7 +92,7 @@ impl Migrate {
         }
     }
 
-    fn to_migration_query(self, contents: &str) -> result::Result<MigrationQuery, Error> {
+    fn to_migration_query(self, contents: &str) -> result::Result<MigrationQuery, serde_json::Error> {
         let deserialized= serde_json::from_str(contents);
 
         deserialized
@@ -164,7 +165,36 @@ impl Migrate {
         }
     }
 
+    async fn create_migration_table_for_mysql(self) -> result::Result<(), sqlx::Error> {
+        let pool = MySqlPool::connect("mysql://rust:rust@localhost/rust").await?;
+
+        let rows = sqlx::query("SHOW TABLES;")
+            .fetch_all(&pool)
+            .await?;
+
+        sqlx::query(
+        r#"
+CREATE TABLE IF NOT EXISTS migrations_dynamodb_status (id int, name text, created_at DATETIME)
+            "#
+        )
+            .execute(&pool)
+            .await?;
+
+        dbg!(rows);
+
+        Ok(())
+    }
+
     async fn create_migration_table(self) -> result::Result<(), String> {
+        let driver = "mysql";
+
+        match driver {
+            "mysql" => {
+
+            },
+            _ => {},
+        }
+
         let migration_dir;
         match self.migration_dir() {
             Ok(target_dir) => migration_dir = target_dir,
@@ -249,6 +279,12 @@ impl Migrate {
     fn create_client(self) -> Client { DynamodbClientFactory::factory() }
 
     pub async fn execute(self, command: &MigrateType, migrate_path: &Option<PathBuf>) -> Output {
+        let config = Settings::new();
+
+        dbg!("Start execute!!!");
+
+        let _result = self.create_migration_table_for_mysql().await;
+
         if let Err(message) = self.create_migration_table().await {
             return Output::new(ExitCode::FAILED, format!("Migration failed. : {}", message))
         }

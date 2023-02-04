@@ -10,6 +10,7 @@ use crate::command::reset::Reset as ResetCommand;
 
 mod command;
 mod clients;
+mod settings;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
