@@ -11,7 +11,6 @@ use std::process::Command as ProcessCommand;
 use std::process::Output as ProcessOutput;
 use std::io::{Read, Result};
 use std::path::PathBuf;
-use config::Config;
 use sqlx::MySqlPool;
 
 use crate::command::{ExitCode, Output};
