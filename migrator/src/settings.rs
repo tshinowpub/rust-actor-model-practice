@@ -12,12 +12,32 @@ pub struct Migration {
     driver: MigrationType,
 }
 
-#[derive(Clone, Debug, Deserialize)]
+impl Migration {
+    pub fn driver(self) -> MigrationType {
+        self.driver
+    }
+}
+
+#[derive(Clone, Debug, Deserialize, PartialEq)]
 pub enum MigrationType {
     #[serde(rename = "mysql")]
     Mysql,
     #[serde(rename = "dynamodb")]
     Dynamodb,
+}
+
+impl MigrationType {
+    pub fn is_mysql(&self) -> bool {
+        *self == MigrationType::Mysql
+    }
+
+    pub fn is_dynamodb(&self) -> bool {
+        *self == MigrationType::Dynamodb
+    }
+
+    pub fn value(&self) -> &MigrationType {
+        &self
+    }
 }
 
 #[derive(Clone, Debug, Deserialize, PartialEq, strum_macros::EnumString, strum_macros::Display)]
@@ -43,12 +63,18 @@ pub struct Settings {
     env: Environment,
 }
 
+impl Settings {
+    pub fn migration(self) -> Migration {
+        self.migration
+    }
+}
+
 const CONFIG_FILE_PATH: &str = "./config/default.toml";
 const CONFIG_FILE_PREFIX: &str = "./config/";
 
 impl Settings {
     pub fn new() -> Result<Settings, ConfigError> {
-        let env: Environment = Environment::from_str(std::env::var("ENV").unwrap().as_str()).unwrap();
+        let env =  Environment::from_str(std::env::var("ENV").unwrap().as_str()).unwrap();
 
         let config = Config::builder()
             .set_default("env", format!("{}", env))?
@@ -58,13 +84,6 @@ impl Settings {
             .build()
             .unwrap();
 
-        let settings = config
-            .clone()
-            .try_deserialize::<Settings>()
-            .unwrap();
-
-        println!("{:?}", &settings);
-
-        Ok(settings)
+        Ok(config.try_deserialize::<Settings>().unwrap())
     }
 }

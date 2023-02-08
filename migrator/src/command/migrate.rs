@@ -278,7 +278,18 @@ CREATE TABLE IF NOT EXISTS migrations_dynamodb_status (id int, name text, create
     fn create_client(self) -> Client { DynamodbClientFactory::factory() }
 
     pub async fn execute(self, command: &MigrateType, migrate_path: &Option<PathBuf>) -> Output {
-        let config = Settings::new();
+        match Settings::new() {
+            Ok(config) => {
+                if config.clone().migration().driver().is_mysql() {
+                    println!("MySQL selected.");
+                }
+
+                if config.clone().migration().driver().is_dynamodb() {
+                    println!("DynamoDB selected.");
+                }
+            },
+            Err(error) => return Output::new(ExitCode::FAILED, format!("Cannot load config. : {}", error.to_string()))
+        }
 
         dbg!("Start execute!!!");
 
