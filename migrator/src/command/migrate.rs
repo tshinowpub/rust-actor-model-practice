@@ -17,7 +17,7 @@ use crate::command::{ExitCode, Output};
 use crate::clients::dynamodb_client_factory::DynamodbClientFactory;
 use crate::command::migrate_type::MigrateType;
 use crate::command::migration_query::MigrationQuery;
-use crate::settings::Settings;
+use crate::settings::{Driver, Settings};
 
 const RESOURCE_FILE_DIR: &str = "resource";
 const DEFAULT_MIGRATION_FILE_PATH: &str = "migrations";
@@ -184,16 +184,7 @@ CREATE TABLE IF NOT EXISTS migrations_dynamodb_status (id int, name text, create
         Ok(())
     }
 
-    async fn create_migration_table(self) -> result::Result<(), String> {
-        let driver = "mysql";
-
-        match driver {
-            "mysql" => {
-
-            },
-            _ => {},
-        }
-
+    async fn create_migration_table_for_dynamodb(self) -> result::Result<(), String> {
         let migration_dir;
         match self.migration_dir() {
             Ok(target_dir) => migration_dir = target_dir,
@@ -278,25 +269,26 @@ CREATE TABLE IF NOT EXISTS migrations_dynamodb_status (id int, name text, create
     fn create_client(self) -> Client { DynamodbClientFactory::factory() }
 
     pub async fn execute(self, command: &MigrateType, migrate_path: &Option<PathBuf>) -> Output {
-        match Settings::new() {
-            Ok(config) => {
-                if config.clone().migration().driver().is_mysql() {
-                    println!("MySQL selected.");
-                }
-
-                if config.clone().migration().driver().is_dynamodb() {
-                    println!("DynamoDB selected.");
-                }
-            },
-            Err(error) => return Output::new(ExitCode::FAILED, format!("Cannot load config. : {}", error.to_string()))
+        let result= Settings::new();
+        if let Err(error) = result {
+            return Output::new(ExitCode::FAILED, format!("Cannot load config. : {}", error.to_string()))
         }
 
         dbg!("Start execute!!!");
 
-        let _result = self.create_migration_table_for_mysql().await;
+        let config = result.unwrap();
+        if config.clone().migration().driver().is_mysql() {
+            println!("MySQL selected.");
 
-        if let Err(message) = self.create_migration_table().await {
-            return Output::new(ExitCode::FAILED, format!("Migration failed. : {}", message))
+            let _result = self.create_migration_table_for_mysql().await;
+        }
+
+        if config.clone().migration().driver().is_dynamodb() {
+            println!("DynamoDB selected.");
+
+            if let Err(message) = self.create_migration_table_for_dynamodb().await {
+                return Output::new(ExitCode::FAILED, format!("Migration failed. : {}", message))
+            }
         }
 
         let user_migration_file_path = match migrate_path {

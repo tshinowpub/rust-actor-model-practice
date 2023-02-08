@@ -9,34 +9,30 @@ pub struct Log {
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct Migration {
-    driver: MigrationType,
+    driver: Driver,
 }
 
 impl Migration {
-    pub fn driver(self) -> MigrationType {
+    pub fn driver(self) -> Driver {
         self.driver
     }
 }
 
 #[derive(Clone, Debug, Deserialize, PartialEq)]
-pub enum MigrationType {
+pub enum Driver {
     #[serde(rename = "mysql")]
     Mysql,
     #[serde(rename = "dynamodb")]
     Dynamodb,
 }
 
-impl MigrationType {
+impl Driver {
     pub fn is_mysql(&self) -> bool {
-        *self == MigrationType::Mysql
+        *self == Driver::Mysql
     }
 
     pub fn is_dynamodb(&self) -> bool {
-        *self == MigrationType::Dynamodb
-    }
-
-    pub fn value(&self) -> &MigrationType {
-        &self
+        *self == Driver::Dynamodb
     }
 }
 
