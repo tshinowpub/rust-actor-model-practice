@@ -7,6 +7,7 @@ use aws_sdk_dynamodb::types::SdkError;
 use aws_sdk_dynamodb::types::SdkError::ServiceError;
 use aws_sdk_dynamodb::model::{AttributeDefinition, KeySchemaElement, ProvisionedThroughput};
 use std::{env, fs, result};
+use std::borrow::Borrow;
 use std::io::{Read, Result};
 use std::path::PathBuf;
 use sqlx::MySqlPool;
@@ -27,15 +28,6 @@ pub struct Migrate {
 impl Migrate {
     pub fn new() -> Self {
         Self {}
-    }
-
-    fn migration_dir(self) -> Result<PathBuf> {
-        let current_dir = env::current_dir();
-
-        match current_dir {
-            Ok(path) => Ok(path.join("src").join(RESOURCE_FILE_DIR)),
-            _ => current_dir,
-        }
     }
 
     fn read_migration_files(&self, current_path: PathBuf) -> result::Result<Vec<PathBuf>, String> {
@@ -184,9 +176,9 @@ CREATE TABLE IF NOT EXISTS migrations_dynamodb_status (id int, name text, create
 
     async fn create_migration_table_for_dynamodb(self) -> result::Result<(), String> {
         let migration_dir;
-        match self.migration_dir() {
-            Ok(target_dir) => migration_dir = target_dir,
-            Err(error)       => return Err(format!("Failed to get current execute path: {}.", error)),
+        match env::current_dir() {
+            Ok(path) => migration_dir = path.join("src").join(RESOURCE_FILE_DIR),
+            Err(error) => return Err(format!("Failed to get current execute path: {}.", error))
         }
 
         match self.read_migration_files(migration_dir) {
@@ -267,22 +259,22 @@ CREATE TABLE IF NOT EXISTS migrations_dynamodb_status (id int, name text, create
     fn create_client(self) -> Client { DynamodbClientFactory::factory() }
 
     pub async fn execute(self, command: &MigrateType, migrate_path: Option<&PathBuf>) -> Output {
+        println!("Start migrate command...");
+
         let result= Settings::new();
         if let Err(error) = result {
             return Output::new(ExitCode::FAILED, format!("Cannot load config. : {}", error.to_string()))
         }
 
-        dbg!("Start execute!!!");
-
         let config = result.unwrap();
-        if config.clone().migration().driver().is_mysql() {
-            println!("MySQL selected.");
+        if config.borrow().migration().driver().is_mysql() {
+            println!("MySQL selected...");
 
             let _result = self.create_migration_table_for_mysql().await;
         }
 
-        if config.clone().migration().driver().is_dynamodb() {
-            println!("DynamoDB selected.");
+        if config.borrow().migration().driver().is_dynamodb() {
+            println!("DynamoDB selected...");
 
             if let Err(message) = self.create_migration_table_for_dynamodb().await {
                 return Output::new(ExitCode::FAILED, format!("Migration failed. : {}", message))

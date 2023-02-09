@@ -13,8 +13,8 @@ pub struct Migration {
 }
 
 impl Migration {
-    pub fn driver(self) -> Driver {
-        self.driver
+    pub fn driver(&self) -> &Driver {
+        &self.driver
     }
 }
 
@@ -60,8 +60,8 @@ pub struct Settings {
 }
 
 impl Settings {
-    pub fn migration(self) -> Migration {
-        self.migration
+    pub fn migration(&self) -> &Migration {
+        &self.migration
     }
 }
 
