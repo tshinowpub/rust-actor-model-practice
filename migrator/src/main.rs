@@ -57,7 +57,7 @@ async fn main() {
         Some(Commands::Migrate { command, path}) => {
             let migrate = MigrateCommand::new();
 
-            let output = migrate.execute(command, path).await;
+            let output = migrate.execute(command, path.as_ref()).await;
 
             println!("{}", output.message());
 

@@ -7,8 +7,6 @@ use aws_sdk_dynamodb::types::SdkError;
 use aws_sdk_dynamodb::types::SdkError::ServiceError;
 use aws_sdk_dynamodb::model::{AttributeDefinition, KeySchemaElement, ProvisionedThroughput};
 use std::{env, fs, result};
-use std::process::Command as ProcessCommand;
-use std::process::Output as ProcessOutput;
 use std::io::{Read, Result};
 use std::path::PathBuf;
 use sqlx::MySqlPool;
@@ -17,7 +15,7 @@ use crate::command::{ExitCode, Output};
 use crate::clients::dynamodb_client_factory::DynamodbClientFactory;
 use crate::command::migrate_type::MigrateType;
 use crate::command::migration_query::MigrationQuery;
-use crate::settings::{Driver, Settings};
+use crate::settings::Settings;
 
 const RESOURCE_FILE_DIR: &str = "resource";
 const DEFAULT_MIGRATION_FILE_PATH: &str = "migrations";
@@ -243,7 +241,7 @@ CREATE TABLE IF NOT EXISTS migrations_dynamodb_status (id int, name text, create
     }
 
     #[cfg(target_os = "windows")]
-    fn execute_user_migration(self, migration_data: String) -> ProcessOutput {
+    fn execute_user_migration(self, migration_data: String) -> std::process::Output {
         dbg!(std::env::consts::OS);
 
         let output = if cfg!(target_os = "windows") {
@@ -251,12 +249,12 @@ CREATE TABLE IF NOT EXISTS migrations_dynamodb_status (id int, name text, create
 
             dbg!(&value);
 
-            ProcessCommand::new("cmd")
+            std::process::Command::new("cmd")
                 .args(["/C", value.as_str()])
                 .output()
                 .expect("failed to execute process on Windows.")
         } else {
-            ProcessCommand::new("sh")
+            std::process::Command::new("sh")
                 .arg("-c")
                 .arg(migration_data.as_str())
                 .output()
@@ -268,7 +266,7 @@ CREATE TABLE IF NOT EXISTS migrations_dynamodb_status (id int, name text, create
 
     fn create_client(self) -> Client { DynamodbClientFactory::factory() }
 
-    pub async fn execute(self, command: &MigrateType, migrate_path: &Option<PathBuf>) -> Output {
+    pub async fn execute(self, command: &MigrateType, migrate_path: Option<&PathBuf>) -> Output {
         let result= Settings::new();
         if let Err(error) = result {
             return Output::new(ExitCode::FAILED, format!("Cannot load config. : {}", error.to_string()))
@@ -291,15 +289,14 @@ CREATE TABLE IF NOT EXISTS migrations_dynamodb_status (id int, name text, create
             }
         }
 
-        let user_migration_file_path = match migrate_path {
-            Some(path) => path.to_path_buf(),
-            None                => PathBuf::from(DEFAULT_MIGRATION_FILE_PATH)
-        };
-
-        if let Err(message) = self.migrate(command, user_migration_file_path).await {
+        if let Err(message) = self.migrate(command, self.migrate_path(migrate_path)).await {
             return Output::new(ExitCode::FAILED, format!("Migration failed. : {}", message))
         }
 
         Output::new(ExitCode::SUCCEED, "Migrate succeed.".to_string())
+    }
+
+    fn migrate_path(self, migrate_path: Option<&PathBuf>) -> PathBuf {
+        if migrate_path.is_some() { migrate_path.unwrap().to_path_buf() } else { PathBuf::from(DEFAULT_MIGRATION_FILE_PATH) }
     }
 }
