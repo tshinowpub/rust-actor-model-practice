@@ -69,8 +69,8 @@ const CONFIG_FILE_PATH: &str = "./config/default.toml";
 const CONFIG_FILE_PREFIX: &str = "./config/";
 
 impl Settings {
-    pub fn new() -> Result<Settings, ConfigError> {
-        let env =  Environment::from_str(std::env::var("ENV").unwrap().as_str()).unwrap();
+    pub fn new() -> anyhow::Result<Settings> {
+        let env =  Environment::from_str(std::env::var("ENV")?.as_str()).unwrap();
 
         let config = Config::builder()
             .set_default("env", format!("{}", env))?
