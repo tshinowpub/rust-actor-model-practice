@@ -1529,6 +1529,7 @@ dependencies = [
  "strum",
  "strum_macros",
  "termcolor",
+ "thiserror",
  "tokio",
  "tokio-stream",
 ]

@@ -8,7 +8,7 @@ use aws_sdk_dynamodb::types::SdkError::ServiceError;
 use aws_sdk_dynamodb::model::{AttributeDefinition, KeySchemaElement, ProvisionedThroughput};
 use std::{env, fs, result};
 use std::borrow::Borrow;
-use std::io::{Read, Result};
+use std::io::Read;
 use std::path::PathBuf;
 use sqlx::MySqlPool;
 
@@ -263,7 +263,7 @@ CREATE TABLE IF NOT EXISTS migrations_dynamodb_status (id int, name text, create
 
         let result= Settings::new();
         if let Err(error) = result {
-            return Output::new(ExitCode::FAILED, format!("Cannot load config. : {}", error.to_string()))
+            return Output::new(ExitCode::FAILED, format!("Cannot load config. Value ENV was not found. : {}", error.to_string()))
         }
 
         let config = result.unwrap();

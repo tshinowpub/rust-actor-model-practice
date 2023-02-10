@@ -1,5 +1,5 @@
 use std::str::FromStr;
-use config::{Config, ConfigError, File};
+use config::{Config, File};
 use serde::Deserialize;
 
 #[derive(Debug, Clone, Deserialize)]
