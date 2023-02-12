@@ -1,3 +1,4 @@
+use anyhow::{Result, Context, anyhow};
 use aws_sdk_dynamodb::Client;
 use aws_sdk_dynamodb::error::CreateTableError;
 use aws_sdk_dynamodb::error::DescribeTableError;
@@ -8,9 +9,11 @@ use aws_sdk_dynamodb::types::SdkError::ServiceError;
 use aws_sdk_dynamodb::model::{AttributeDefinition, KeySchemaElement, ProvisionedThroughput};
 use std::{env, fs, result};
 use std::borrow::Borrow;
+use std::fmt::Debug;
 use std::io::Read;
 use std::path::PathBuf;
 use sqlx::MySqlPool;
+use thiserror::__private::PathAsDisplay;
 
 use crate::command::{ExitCode, Output};
 use crate::clients::dynamodb_client_factory::DynamodbClientFactory;
@@ -30,39 +33,26 @@ impl Migrate {
         Self {}
     }
 
-    fn read_migration_files(&self, current_path: PathBuf) -> result::Result<Vec<PathBuf>, String> {
-        let mut migration_files: Vec<PathBuf> = Vec::new();
+    fn read_migration_files(&self, current_path: PathBuf) -> anyhow::Result<Vec<PathBuf>> {
+        let directories = fs::read_dir(&current_path).context(format!("Cannot resolve path. File: {} ", current_path.as_display()))?;
 
-        let result = fs::read_dir(&current_path);
-        match result {
-            Ok(directory) => {
-                for file in directory.into_iter() {
-                    migration_files.push(file.expect("").path());
-                }
-            },
-            _ => return Err(format!("Cannot read directory. path: {}", current_path.to_str().unwrap_or("cannot resolve path."))),
+        let mut migration_files= vec![];
+        for directory in directories {
+            migration_files.push(directory.context(format!("Cannot resolve path."))?.path());
         }
 
         Ok(migration_files)
     }
 
-    fn read_contents(self, path: &PathBuf) -> result::Result<MigrationQuery, &str> {
+    fn read_contents(self, path: &PathBuf) -> anyhow::Result<MigrationQuery> {
         let mut migration_contents = String::new();
+        if fs::File::open(path).context("")?.read_to_string(&mut migration_contents).is_ok() {
+            let query = self.to_migration_query(&migration_contents).context("Cannot parse json file.")?;
 
-        let migration_file = fs::File::open(path);
-        match migration_file {
-            Ok(mut target_file) => {
-                if target_file.read_to_string(&mut migration_contents).is_ok() {
-                    return match self.to_migration_query(&migration_contents) {
-                        Ok(query) => Ok(query),
-                        _ => Err("Cannot parse json file.")
-                    }
-                }
-
-                Err("Cannot load migration contents. File name: ")
-            },
-            _ => Err("Cannot read migration file.")
+            return Ok(query)
         }
+
+        Err(anyhow::anyhow!("Cannot read migration file."))
     }
 
     fn read_user_contents(self, path: &PathBuf) -> result::Result<String, &str> {
@@ -174,12 +164,8 @@ CREATE TABLE IF NOT EXISTS migrations_dynamodb_status (id int, name text, create
         Ok(())
     }
 
-    async fn create_migration_table_for_dynamodb(self) -> result::Result<(), String> {
-        let migration_dir;
-        match env::current_dir() {
-            Ok(path) => migration_dir = path.join("src").join(RESOURCE_FILE_DIR),
-            Err(error) => return Err(format!("Failed to get current execute path: {}.", error))
-        }
+    async fn create_migration_table_for_dynamodb(self) -> anyhow::Result<()> {
+        let migration_dir = env::current_dir().context("Cannot find current_dir.")?.join("src").join(RESOURCE_FILE_DIR);
 
         match self.read_migration_files(migration_dir) {
             Ok(target_files) => {
@@ -193,19 +179,19 @@ CREATE TABLE IF NOT EXISTS migrations_dynamodb_status (id int, name text, create
                         Ok(false) => {
                             let create_table_result = self.create_table(query.table_name(),&query).await;
 
-                            if let Err(error) = create_table_result { return Err(error.to_string()) }
+                            if let Err(error) = create_table_result { return Err(anyhow::anyhow!(error.to_string())) }
                         },
-                        Err(message) => return Err(message.to_string()),
+                        Err(message) => return Err(anyhow::anyhow!(message)),
                     }
                 }
             },
-            Err(message) => return Err(message),
+            Err(message) => return Err(anyhow::anyhow!(message)),
         }
 
         Ok(())
     }
 
-    async fn migrate(self, migrate_type: &MigrateType, migration_dir: PathBuf) -> result::Result<(), String> {
+    async fn migrate(self, migrate_type: &MigrateType, migration_dir: PathBuf) -> anyhow::Result<()> {
         match self.read_migration_files(migration_dir) {
             Ok(target_files) => {
                 for migration_file in target_files {
@@ -226,7 +212,7 @@ CREATE TABLE IF NOT EXISTS migrations_dynamodb_status (id int, name text, create
                     println!("{}", String::from_utf8(output.stdout).unwrap_or("".to_string()))
                 }
             },
-            Err(message) => return Err(message),
+            Err(message) => return Err(anyhow::anyhow!(message)),
         }
 
         Ok(())

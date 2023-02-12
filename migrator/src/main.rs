@@ -1,9 +1,9 @@
+use anyhow::Result;
 use clap::{Parser, Subcommand};
-
 use std::path::PathBuf;
 use std::process::exit;
-use crate::command::migrate_type::MigrateType;
 
+use crate::command::migrate_type::MigrateType;
 use crate::command::migrate::Migrate as MigrateCommand;
 use crate::command::list::List as ListCommand;
 use crate::command::reset::Reset as ResetCommand;
@@ -42,7 +42,7 @@ enum Commands {
 }
 
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<()> {
     let cli = Cli::parse();
 
     dbg!("{:?}", &cli);

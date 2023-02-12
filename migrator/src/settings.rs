@@ -1,3 +1,4 @@
+use anyhow::{Result, Context};
 use std::str::FromStr;
 use config::{Config, File};
 use serde::Deserialize;
@@ -69,8 +70,8 @@ const CONFIG_FILE_PATH: &str = "./config/default.toml";
 const CONFIG_FILE_PREFIX: &str = "./config/";
 
 impl Settings {
-    pub fn new() -> anyhow::Result<Settings> {
-        let env =  Environment::from_str(std::env::var("ENV")?.as_str()).unwrap();
+    pub fn new() -> Result<Settings> {
+        let env =  Environment::from_str(std::env::var("ENV").context("No setting config error.")?.as_str()).unwrap();
 
         let config = Config::builder()
             .set_default("env", format!("{}", env))?
