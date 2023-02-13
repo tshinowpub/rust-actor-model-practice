@@ -269,7 +269,10 @@ CREATE TABLE IF NOT EXISTS migrations_dynamodb_status (id int, name text, create
 
     fn migrate_path_resolver(self) -> fn(migrate_path: Option<&PathBuf>, default: PathBuf) -> PathBuf {
         (|migrate_path, default| (
-            if migrate_path.is_some() { migrate_path.unwrap().to_path_buf() } else { default }
+            match migrate_path {
+                Some(path) => path.to_path_buf(),
+                _                   => default,
+            }
         ))
     }
 }
