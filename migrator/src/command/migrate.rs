@@ -55,29 +55,24 @@ impl Migrate {
         Err(anyhow::anyhow!("Cannot read migration file."))
     }
 
-    fn read_user_contents(self, path: &PathBuf) -> result::Result<String, &str> {
+    fn read_user_contents(self, path: &PathBuf) -> anyhow::Result<String> {
         let mut migration_contents = String::new();
 
-        let migration_file = fs::File::open(path);
-        match migration_file {
-            Ok(mut target_file) => {
-                if target_file.read_to_string(&mut migration_contents).is_ok() {
-                    return Ok(migration_contents);
-                }
-
-                Err("Cannot load migration contents. File name: ")
-            },
-            _ => Err("Cannot read migration file.")
+        let mut target_file = fs::File::open(path).context("Cannot read migration file.")?;
+        if target_file.read_to_string(&mut migration_contents).is_ok() {
+            return Ok(migration_contents);
         }
+
+        Err(anyhow!("Cannot load migration contents. File name: "))
     }
 
-    fn to_migration_query(self, contents: &str) -> result::Result<MigrationQuery, serde_json::Error> {
+    fn to_migration_query(self, contents: &str) -> anyhow::Result<MigrationQuery> {
         let deserialized= serde_json::from_str(contents);
 
-        deserialized
+        Ok(deserialized?)
     }
 
-    async fn create_table(self, table_name: &str, query: &MigrationQuery) -> result::Result<CreateTableOutput, SdkError<CreateTableError>> {
+    async fn create_table(self, table_name: &str, query: &MigrationQuery) -> anyhow::Result<CreateTableOutput> {
         println!("Called create_table!!!");
 
         println!("TableName: {}", table_name);
@@ -115,19 +110,8 @@ impl Migrate {
             .provisioned_throughput(provisioned_throughput)
             .send()
             .await;
-        
-        return match create_table_response {
-            Ok(output) => {
-                dbg!("{}", output.table_description());
 
-                Ok(output)
-            },
-            Err(error) => {
-                dbg!("{}", error.to_string());
-
-                Err(error)
-            }
-        }
+        Ok(create_table_response?)
     }
 
     async fn exists_table(self, table_name: &str) -> anyhow::Result<ExistsTableResultType> {
@@ -144,7 +128,7 @@ impl Migrate {
         }
     }
 
-    async fn create_migration_table_for_mysql(self) -> result::Result<(), sqlx::Error> {
+    async fn create_migration_table_for_mysql(self) -> anyhow::Result<()> {
         let pool = MySqlPool::connect("mysql://rust:rust@localhost/rust").await?;
 
         let rows = sqlx::query("SHOW TABLES;")
@@ -184,27 +168,22 @@ CREATE TABLE IF NOT EXISTS migrations_dynamodb_status (id int, name text, create
     }
 
     async fn migrate(self, migrate_type: &MigrateType, migration_dir: PathBuf) -> anyhow::Result<()> {
-        match self.read_migration_files(migration_dir) {
-            Ok(target_files) => {
-                for migration_file in target_files {
-                    if migrate_type.is_up() && !migration_file.to_str().unwrap().contains(".up.") {
-                        continue;
-                    }
+        let targets = self.read_migration_files(migration_dir)?;
 
-                    if migrate_type.is_down() && !migration_file.to_str().unwrap().contains(".down.") {
-                        continue;
-                    }
+        for migration_file in targets {
+            if migrate_type.is_up() && !migration_file.to_str().unwrap().contains(".up.") {
+                continue;
+            }
 
-                    println!("Run: {}", migration_file.to_str().unwrap());
+            if migrate_type.is_down() && !migration_file.to_str().unwrap().contains(".down.") {
+                continue;
+            }
 
-                    let migration_data = self.read_user_contents(&migration_file).unwrap();
+            println!("Run: {:?}", migration_file.to_str().unwrap());
 
-                    let output = self.execute_user_migration(migration_data);
+            let output = self.execute_user_migration(self.read_user_contents(&migration_file)?);
 
-                    println!("{}", String::from_utf8(output.stdout).unwrap_or("".to_string()))
-                }
-            },
-            Err(message) => return Err(anyhow::anyhow!(message)),
+            println!("{}", String::from_utf8(output.stdout).unwrap_or("".to_string()))
         }
 
         Ok(())
