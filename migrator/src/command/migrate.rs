@@ -1,13 +1,11 @@
-use anyhow::{Result, Context, anyhow};
+use anyhow::{Context, anyhow};
 use aws_sdk_dynamodb::Client;
-use aws_sdk_dynamodb::error::CreateTableError;
 use aws_sdk_dynamodb::error::DescribeTableError;
 use aws_sdk_dynamodb::error::DescribeTableErrorKind::ResourceNotFoundException;
 use aws_sdk_dynamodb::output::CreateTableOutput;
-use aws_sdk_dynamodb::types::SdkError;
 use aws_sdk_dynamodb::types::SdkError::ServiceError;
 use aws_sdk_dynamodb::model::{AttributeDefinition, KeySchemaElement, ProvisionedThroughput};
-use std::{env, fs, result};
+use std::{env, fs};
 use std::borrow::Borrow;
 use std::fmt::Debug;
 use std::io::Read;
@@ -19,7 +17,7 @@ use crate::command::{ExitCode, Output};
 use crate::clients::dynamodb_client_factory::DynamodbClientFactory;
 use crate::command::migrate_type::MigrateType;
 use crate::command::migration_query::MigrationQuery;
-use crate::settings::Settings;
+use crate::settings::{Driver, Settings};
 
 const RESOURCE_FILE_DIR: &str = "resource";
 const DEFAULT_MIGRATION_FILE_PATH: &str = "migrations";
@@ -181,7 +179,7 @@ CREATE TABLE IF NOT EXISTS migrations_dynamodb_status (id int, name text, create
 
             println!("Run: {:?}", migration_file.to_str().unwrap());
 
-            let output = self.execute_user_migration(self.read_user_contents(&migration_file)?);
+            let output = self.execute_user_migration_command(self.read_user_contents(&migration_file)?);
 
             println!("{}", String::from_utf8(output.stdout).unwrap_or("".to_string()))
         }
@@ -190,9 +188,7 @@ CREATE TABLE IF NOT EXISTS migrations_dynamodb_status (id int, name text, create
     }
 
     #[cfg(target_os = "windows")]
-    fn execute_user_migration(self, migration_data: String) -> std::process::Output {
-        dbg!(std::env::consts::OS);
-
+    fn execute_user_migration_command(self, migration_data: String) -> std::process::Output {
         let output = if cfg!(target_os = "windows") {
             let value = migration_data.replace("\n", "");
 
@@ -247,12 +243,11 @@ CREATE TABLE IF NOT EXISTS migrations_dynamodb_status (id int, name text, create
     }
 
     fn migrate_path_resolver(self) -> fn(migrate_path: Option<&PathBuf>, default: PathBuf) -> PathBuf {
-        (|migrate_path, default| (
+        |migrate_path, default|
             match migrate_path {
                 Some(path) => path.to_path_buf(),
-                _                   => default,
+                _ => default,
             }
-        ))
     }
 }
 
