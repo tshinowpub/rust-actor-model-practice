@@ -130,7 +130,7 @@ impl Migrate {
         }
     }
 
-    async fn exists_table(self, table_name: &str) -> result::Result<bool, String> {
+    async fn exists_table(self, table_name: &str) -> anyhow::Result<ExistsTableResultType> {
         let describe_table_response = self.create_client()
             .describe_table()
             .table_name(table_name)
@@ -138,9 +138,9 @@ impl Migrate {
             .await;
 
         return match describe_table_response {
-            Ok(_) => Ok(true),
-            Err(ServiceError { err: DescribeTableError { kind: ResourceNotFoundException(_) , .. }, raw: _ })  => Ok(false),
-            Err(error) => Err(error.to_string()),
+            Ok(_) => Ok(ExistsTableResultType::Found),
+            Err(ServiceError { err: DescribeTableError { kind: ResourceNotFoundException(_) , .. }, raw: _ })  => Ok(ExistsTableResultType::NotFound),
+            Err(error) => Err(anyhow!(error.to_string())),
         }
     }
 
@@ -165,30 +165,22 @@ CREATE TABLE IF NOT EXISTS migrations_dynamodb_status (id int, name text, create
     }
 
     async fn create_migration_table_for_dynamodb(self) -> anyhow::Result<()> {
-        let migration_dir = env::current_dir().context("Cannot find current_dir.")?.join("src").join(RESOURCE_FILE_DIR);
+        for migration_file in self.read_migration_files(self.migration_dir()?).context("")? {
+            let query = self.read_contents(&migration_file).context("Cannot read migration file.")?;
 
-        match self.read_migration_files(migration_dir) {
-            Ok(target_files) => {
-                for migration_file in target_files {
-                    println!("{}", migration_file.to_str().unwrap());
-
-                    let query = self.read_contents(&migration_file).unwrap();
-
-                    match self.exists_table(query.table_name()).await {
-                        Ok(true) => {},
-                        Ok(false) => {
-                            let create_table_result = self.create_table(query.table_name(),&query).await;
-
-                            if let Err(error) = create_table_result { return Err(anyhow::anyhow!(error.to_string())) }
-                        },
-                        Err(message) => return Err(anyhow::anyhow!(message)),
-                    }
-                }
-            },
-            Err(message) => return Err(anyhow::anyhow!(message)),
+            if ExistsTableResultType::NotFound == self.exists_table(query.table_name()).await? {
+                self.create_table(query.table_name(), &query).await.context("Cannot create table. {}")?;
+            }
         }
 
         Ok(())
+    }
+
+    fn migration_dir(self) -> anyhow::Result<PathBuf> {
+        Ok(env::current_dir()
+            .context("Cannot find current_dir.")?
+            .join("src")
+            .join(RESOURCE_FILE_DIR))
     }
 
     async fn migrate(self, migrate_type: &MigrateType, migration_dir: PathBuf) -> anyhow::Result<()> {
@@ -277,4 +269,10 @@ CREATE TABLE IF NOT EXISTS migrations_dynamodb_status (id int, name text, create
     fn migrate_path(self, migrate_path: Option<&PathBuf>) -> PathBuf {
         if migrate_path.is_some() { migrate_path.unwrap().to_path_buf() } else { PathBuf::from(DEFAULT_MIGRATION_FILE_PATH) }
     }
+}
+
+#[derive(Debug, PartialEq)]
+enum ExistsTableResultType {
+    Found,
+    NotFound,
 }

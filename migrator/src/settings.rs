@@ -81,6 +81,6 @@ impl Settings {
             .build()
             .unwrap();
 
-        Ok(config.try_deserialize::<Settings>().unwrap())
+        Ok(config.try_deserialize::<Settings>()?)
     }
 }
