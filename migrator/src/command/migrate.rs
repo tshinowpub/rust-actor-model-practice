@@ -259,15 +259,18 @@ CREATE TABLE IF NOT EXISTS migrations_dynamodb_status (id int, name text, create
             }
         }
 
-        if let Err(message) = self.migrate(command, self.migrate_path(migrate_path)).await {
+        let path = self.migrate_path_resolver()(migrate_path, PathBuf::from(DEFAULT_MIGRATION_FILE_PATH));
+        if let Err(message) = self.migrate(command, path).await {
             return Output::new(ExitCode::FAILED, format!("Migration failed. : {}", message))
         }
 
         Output::new(ExitCode::SUCCEED, "Migrate succeed.".to_string())
     }
 
-    fn migrate_path(self, migrate_path: Option<&PathBuf>) -> PathBuf {
-        if migrate_path.is_some() { migrate_path.unwrap().to_path_buf() } else { PathBuf::from(DEFAULT_MIGRATION_FILE_PATH) }
+    fn migrate_path_resolver(self) -> fn(migrate_path: Option<&PathBuf>, default: PathBuf) -> PathBuf {
+        (|migrate_path, default| (
+            if migrate_path.is_some() { migrate_path.unwrap().to_path_buf() } else { default }
+        ))
     }
 }
 
