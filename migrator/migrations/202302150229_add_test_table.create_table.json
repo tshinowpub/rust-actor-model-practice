@@ -1,0 +1,27 @@
+{
+  "TableName" : "Tests",
+  "AttributeDefinitions": [
+    {
+      "AttributeName": "AccountId",
+      "AttributeType": "S"
+    },
+    {
+      "AttributeName": "PostedAt",
+      "AttributeType": "S"
+    }
+  ],
+  "KeySchema": [
+    {
+      "KeyType": "HASH",
+      "AttributeName": "AccountId"
+    },
+    {
+      "KeyType": "RANGE",
+      "AttributeName": "PostedAt"
+    }
+  ],
+  "ProvisionedThroughput": {
+    "ReadCapacityUnits": 1,
+    "WriteCapacityUnits": 1
+  }
+}
