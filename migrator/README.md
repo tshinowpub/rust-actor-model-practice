@@ -4,6 +4,13 @@ DynamoDB Migrator.
 ## Migration Filename Format
 
 ```shell
-{version}_{title}.up.{extension}
-{version}_{title}.down.{extension}
+{version}_{title}.{command}.json
+{version}_{title}.{command}.json
 ```
+
+### command
+
+DynamoDB commands.
+
+- create_table
+- delete_table

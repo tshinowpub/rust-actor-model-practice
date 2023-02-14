@@ -1,1 +1,0 @@
-aws dynamodb delete-table --endpoint http://127.0.0.1:8000 --table-name Music
