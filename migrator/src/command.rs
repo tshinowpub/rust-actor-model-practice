@@ -1,8 +1,9 @@
 pub mod migrate;
-pub mod migration_query;
+pub mod migrate_operation_type;
 pub mod migrate_type;
 pub mod list;
 pub mod reset;
+pub mod query;
 
 #[derive(Debug, Clone)]
 pub struct Output {

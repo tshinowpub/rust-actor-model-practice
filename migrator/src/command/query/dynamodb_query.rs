@@ -25,36 +25,6 @@ pub struct AttributeDefinition {
     attribute_type: String
 }
 
-#[derive(Serialize, Deserialize, Debug, Default)]
-pub struct MigrationQuery {
-    #[serde(rename = "TableName")]
-    table_name: String,
-    #[serde(rename = "AttributeDefinitions")]
-    attribute_definitions: Vec<AttributeDefinition>,
-    #[serde(rename = "KeySchema")]
-    key_schemas: Vec<KeySchema>,
-    #[serde(rename = "ProvisionedThroughput")]
-    provisioned_throughput: ProvisionedThroughput,
-}
-
-impl MigrationQuery {
-    pub fn table_name(&self) -> &str {
-        &self.table_name
-    }
-
-    pub fn key_schemas(&self) -> &Vec<KeySchema> {
-        &self.key_schemas
-    }
-
-    pub fn attribute_definitions(&self) -> &Vec<AttributeDefinition> {
-        &self.attribute_definitions
-    }
-
-    pub fn provisioned_throughput(&self) -> &ProvisionedThroughput {
-        &self.provisioned_throughput
-    }
-}
-
 impl KeySchema {
     pub fn attribute_name(&self) -> &str {
         &self.attribute_name
@@ -72,6 +42,7 @@ impl KeySchema {
         }
     }
 }
+
 
 impl AttributeDefinition {
     pub fn attribute_name(&self) -> &str {

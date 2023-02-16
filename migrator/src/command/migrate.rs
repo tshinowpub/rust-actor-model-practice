@@ -1,5 +1,4 @@
 use anyhow::{Context, anyhow};
-use aws_sdk_dynamodb::Client;
 use aws_sdk_dynamodb::error::DescribeTableError;
 use aws_sdk_dynamodb::error::DescribeTableErrorKind::ResourceNotFoundException;
 use aws_sdk_dynamodb::output::CreateTableOutput;
@@ -8,16 +7,22 @@ use aws_sdk_dynamodb::model::{AttributeDefinition, KeySchemaElement, Provisioned
 use std::{env, fs};
 use std::borrow::Borrow;
 use std::fmt::Debug;
-use std::io::Read;
 use std::path::PathBuf;
+use aws_sdk_dynamodb::operation::CreateTable;
+use serde::Deserialize;
 use sqlx::MySqlPool;
+use sqlx::query::Query;
 use thiserror::__private::PathAsDisplay;
 
 use crate::command::{ExitCode, Output};
 use crate::clients::dynamodb_client_factory::DynamodbClientFactory;
+use crate::clients::client::Client;
+use crate::command::migrate_operation_type::MigrateOperationType;
 use crate::command::migrate_type::MigrateType;
-use crate::command::migration_query::MigrationQuery;
-use crate::settings::{Driver, Settings};
+use crate::command::query::create_table::CreateTableQuery;
+use crate::command::query::delete_table::DeleteTableQuery;
+use crate::command::query::put_item::PutItemQuery;
+use crate::settings::Settings;
 
 const RESOURCE_FILE_DIR: &str = "resource";
 const DEFAULT_MIGRATION_FILE_PATH: &str = "migrations";
@@ -42,67 +47,8 @@ impl Migrate {
         Ok(migration_files)
     }
 
-    fn read_contents(self, path: &PathBuf) -> anyhow::Result<MigrationQuery> {
-        let mut migration_contents = String::new();
-        if fs::File::open(path).context("")?.read_to_string(&mut migration_contents).is_ok() {
-            let query = self.to_migration_query(&migration_contents).context("Cannot parse json file.")?;
-
-            return Ok(query)
-        }
-
-        Err(anyhow::anyhow!("Cannot read migration file."))
-    }
-
-    fn to_migration_query(self, contents: &str) -> anyhow::Result<MigrationQuery> {
-        let deserialized= serde_json::from_str(contents);
-
-        Ok(deserialized?)
-    }
-
-    async fn create_table(self, table_name: &str, query: &MigrationQuery) -> anyhow::Result<CreateTableOutput> {
-        println!("Called create_table!!!");
-
-        println!("TableName: {}", table_name);
-
-        let vec_attribute_definitions = query.attribute_definitions().to_vec().iter()
-            .map(|attribute_definition| (
-                AttributeDefinition::builder()
-                    .attribute_name(attribute_definition.attribute_name()))
-                    .attribute_type(attribute_definition.attribute_type())
-                    .build()
-            )
-            .collect::<Vec<_>>();
-
-        let vec_key_schemas = query.key_schemas().to_vec().iter()
-            .map(|key_schema| (
-                KeySchemaElement::builder()
-                    .attribute_name(key_schema.attribute_name()))
-                    .key_type(key_schema.key_type())
-                    .build()
-            )
-            .collect::<Vec<_>>();
-
-        let input_provisioned_throughput = query.provisioned_throughput();
-
-        let provisioned_throughput = ProvisionedThroughput::builder()
-            .read_capacity_units(*input_provisioned_throughput.read_capacity_units())
-            .write_capacity_units(*input_provisioned_throughput.write_capacity_units())
-            .build();
-
-        let create_table_response = self.create_client()
-            .create_table()
-            .table_name(table_name)
-            .set_attribute_definitions(Some(vec_attribute_definitions))
-            .set_key_schema(Some(vec_key_schemas))
-            .provisioned_throughput(provisioned_throughput)
-            .send()
-            .await;
-
-        Ok(create_table_response?)
-    }
-
     async fn exists_table(self, table_name: &str) -> anyhow::Result<ExistsTableResultType> {
-        let describe_table_response = self.create_client()
+        let describe_table_response = DynamodbClientFactory::factory()
             .describe_table()
             .table_name(table_name)
             .send()
@@ -137,10 +83,12 @@ CREATE TABLE IF NOT EXISTS migrations_dynamodb_status (id int, name text, create
 
     async fn create_migration_table_for_dynamodb(self) -> anyhow::Result<()> {
         for migration_file in self.read_migration_files(self.migration_dir()?).context("")? {
-            let query = self.read_contents(&migration_file).context("Cannot read migration file.")?;
+            let data = std::fs::File::open(&migration_file).context("Cannot read migration file.")?;
+
+            let query = self.from_json_file::<CreateTableQuery>(data)?;
 
             if ExistsTableResultType::NotFound == self.exists_table(query.table_name()).await? {
-                self.create_table(query.table_name(), &query).await.context("Cannot create table. {}")?;
+                Client::default().create_table(query.table_name(), &query).await.context("Cannot create table. {}")?;
             }
         }
 
@@ -180,15 +128,33 @@ CREATE TABLE IF NOT EXISTS migrations_dynamodb_status (id int, name text, create
         let files = self.read_migration_files(target_path)?;
 
         for file in files {
-            let query = self.read_contents(&file).context(format!("Cannot read migration file. {:?}", file.display()))?;
+            let operation_type = MigrateOperationType::resolve(&file)?;
 
-            self.create_table(query.table_name(), &query).await.context("Cannot create table. {}")?;
+            let data = std::fs::File::open(&file)?;
+
+            match operation_type {
+                MigrateOperationType::CreateTable => {
+                    let query = self.from_json_file::<CreateTableQuery>(data)?;
+
+                    let output= Client::default().create_table(query.table_name(), &query).await.context("Cannot create table. {}")?;
+
+                    dbg!(output);
+                },
+                MigrateOperationType::DeleteTable => {
+                    let query = self.from_json_file::<DeleteTableQuery>(data);
+                }
+                _ => {}
+            }
         }
 
         Ok(())
     }
 
-    fn create_client(self) -> Client { DynamodbClientFactory::factory() }
+    fn from_json_file<T: for<'a> Deserialize<'a>>(self, file: std::fs::File) -> anyhow::Result<T> {
+        let aaa: T = serde_json::from_reader(file).context("Cannot parse json file.")?;
+
+        return Ok(aaa)
+    }
 
     fn migration_dir(self) -> anyhow::Result<PathBuf> {
         Ok(env::current_dir()
