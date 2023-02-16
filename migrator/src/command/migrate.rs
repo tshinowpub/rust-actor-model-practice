@@ -1,9 +1,4 @@
 use anyhow::{Context, anyhow};
-use aws_sdk_dynamodb::error::DescribeTableError;
-use aws_sdk_dynamodb::error::DescribeTableErrorKind::ResourceNotFoundException;
-use aws_sdk_dynamodb::output::CreateTableOutput;
-use aws_sdk_dynamodb::types::SdkError::ServiceError;
-use aws_sdk_dynamodb::model::{AttributeDefinition, KeySchemaElement, ProvisionedThroughput};
 use std::{env, fs};
 use std::borrow::Borrow;
 use std::fmt::Debug;
@@ -11,8 +6,6 @@ use std::path::PathBuf;
 use aws_sdk_dynamodb::operation::CreateTable;
 use serde::Deserialize;
 use sqlx::MySqlPool;
-use sqlx::query::Query;
-use thiserror::__private::PathAsDisplay;
 
 use crate::command::{ExitCode, Output};
 use crate::clients::dynamodb_client_factory::DynamodbClientFactory;
