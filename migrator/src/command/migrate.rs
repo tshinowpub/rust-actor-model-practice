@@ -16,7 +16,7 @@ use thiserror::__private::PathAsDisplay;
 
 use crate::command::{ExitCode, Output};
 use crate::clients::dynamodb_client_factory::DynamodbClientFactory;
-use crate::clients::client::Client;
+use crate::clients::client::{Client, ExistsTableResultType};
 use crate::command::migrate_operation_type::MigrateOperationType;
 use crate::command::migrate_type::MigrateType;
 use crate::command::query::create_table::CreateTableQuery;
@@ -47,20 +47,6 @@ impl Migrate {
         Ok(migration_files)
     }
 
-    async fn exists_table(self, table_name: &str) -> anyhow::Result<ExistsTableResultType> {
-        let describe_table_response = DynamodbClientFactory::factory()
-            .describe_table()
-            .table_name(table_name)
-            .send()
-            .await;
-
-        return match describe_table_response {
-            Ok(_) => Ok(ExistsTableResultType::Found),
-            Err(ServiceError { err: DescribeTableError { kind: ResourceNotFoundException(_) , .. }, raw: _ })  => Ok(ExistsTableResultType::NotFound),
-            Err(error) => Err(anyhow!(error.to_string())),
-        }
-    }
-
     async fn create_migration_table_for_mysql(self) -> anyhow::Result<()> {
         let pool = MySqlPool::connect("mysql://rust:rust@localhost/rust").await?;
 
@@ -87,8 +73,8 @@ CREATE TABLE IF NOT EXISTS migrations_dynamodb_status (id int, name text, create
 
             let query = self.from_json_file::<CreateTableQuery>(data)?;
 
-            if ExistsTableResultType::NotFound == self.exists_table(query.table_name()).await? {
-                Client::default().create_table(query.table_name(), &query).await.context("Cannot create table. {}")?;
+            if ExistsTableResultType::NotFound == Client::new().exists_table(query.table_name()).await.context("Cannot check exists table.")? {
+                Client::new().create_table(query.table_name(), &query).await.context("Cannot create table. {}")?;
             }
         }
 
@@ -136,7 +122,7 @@ CREATE TABLE IF NOT EXISTS migrations_dynamodb_status (id int, name text, create
                 MigrateOperationType::CreateTable => {
                     let query = self.from_json_file::<CreateTableQuery>(data)?;
 
-                    let output= Client::default().create_table(query.table_name(), &query).await.context("Cannot create table. {}")?;
+                    let output= Client::new().create_table(query.table_name(), &query).await.context("Cannot create table. {}")?;
 
                     dbg!(output);
                 },
@@ -176,8 +162,3 @@ CREATE TABLE IF NOT EXISTS migrations_dynamodb_status (id int, name text, create
     }
 }
 
-#[derive(Debug, PartialEq)]
-enum ExistsTableResultType {
-    Found,
-    NotFound,
-}
