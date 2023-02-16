@@ -1,15 +1,13 @@
-use anyhow::{Context, anyhow};
+use anyhow::Context;
 use std::{env, fs};
 use std::borrow::Borrow;
 use std::fmt::Debug;
 use std::path::PathBuf;
-use aws_sdk_dynamodb::operation::CreateTable;
 use serde::Deserialize;
 use sqlx::MySqlPool;
 use thiserror::__private::PathAsDisplay;
 
 use crate::command::{ExitCode, Output};
-use crate::clients::dynamodb_client_factory::DynamodbClientFactory;
 use crate::clients::client::{Client, ExistsTableResultType};
 use crate::command::migrate_operation_type::MigrateOperationType;
 use crate::command::migrate_type::MigrateType;

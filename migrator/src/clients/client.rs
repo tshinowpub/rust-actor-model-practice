@@ -8,9 +8,7 @@ use aws_sdk_dynamodb::output::{CreateTableOutput, PutItemOutput};
 use aws_sdk_dynamodb::types::SdkError::ServiceError;
 use chrono::Utc;
 use http::Uri;
-use thiserror::__private::PathAsDisplay;
 
-use crate::clients::dynamodb_client_factory::DynamodbClientFactory;
 use crate::command::query::create_table::CreateTableQuery;
 
 #[derive(Debug, PartialEq)]
@@ -86,7 +84,12 @@ impl Client {
     }
 
     pub async fn add_migration_record(self, file: &PathBuf) -> anyhow::Result<PutItemOutput> {
-        let file_name = AttributeValue::S(file.as_display().to_string());
+        let file_name = AttributeValue::S(file
+            .file_name()
+            .context(format!("Cannot get filename from PathBuf. {:?}", file))?
+            .to_string_lossy()
+            .to_string()
+        );
         let executed_at = AttributeValue::S(Utc::now().to_string());
 
         let request = self.client
