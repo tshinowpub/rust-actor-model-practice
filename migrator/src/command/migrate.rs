@@ -6,6 +6,7 @@ use std::path::PathBuf;
 use aws_sdk_dynamodb::operation::CreateTable;
 use serde::Deserialize;
 use sqlx::MySqlPool;
+use thiserror::__private::PathAsDisplay;
 
 use crate::command::{ExitCode, Output};
 use crate::clients::dynamodb_client_factory::DynamodbClientFactory;
@@ -117,6 +118,8 @@ CREATE TABLE IF NOT EXISTS migrations_dynamodb_status (id int, name text, create
 
                     let output= Client::new().create_table(query.table_name(), &query).await.context("Cannot create table. {}")?;
 
+                    Client::new().add_migration_record(&file).await?;
+
                     dbg!(output);
                 },
                 MigrateOperationType::DeleteTable => {
@@ -148,10 +151,6 @@ CREATE TABLE IF NOT EXISTS migrations_dynamodb_status (id int, name text, create
                 Some(path) => path.to_path_buf(),
                 _ => default,
             }
-    }
-
-    fn add_migration_record(self, file: &PathBuf) {
-        // DynamoDB に実行したファイルの名前を登録する
     }
 }
 

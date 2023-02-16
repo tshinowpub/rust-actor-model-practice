@@ -1,11 +1,14 @@
-use anyhow::anyhow;
+use std::path::PathBuf;
+use anyhow::{anyhow, Context};
 use aws_sdk_dynamodb::{Credentials, Endpoint, Region};
 use aws_sdk_dynamodb::error::DescribeTableError;
 use aws_sdk_dynamodb::error::DescribeTableErrorKind::ResourceNotFoundException;
-use aws_sdk_dynamodb::model::{AttributeDefinition, KeySchemaElement, ProvisionedThroughput};
-use aws_sdk_dynamodb::output::CreateTableOutput;
+use aws_sdk_dynamodb::model::{AttributeDefinition, AttributeValue, KeySchemaElement, ProvisionedThroughput};
+use aws_sdk_dynamodb::output::{CreateTableOutput, PutItemOutput};
 use aws_sdk_dynamodb::types::SdkError::ServiceError;
+use chrono::Utc;
 use http::Uri;
+use thiserror::__private::PathAsDisplay;
 
 use crate::clients::dynamodb_client_factory::DynamodbClientFactory;
 use crate::command::query::create_table::CreateTableQuery;
@@ -80,6 +83,21 @@ impl Client {
             Err(ServiceError { err: DescribeTableError { kind: ResourceNotFoundException(_) , .. }, raw: _ })  => Ok(ExistsTableResultType::NotFound),
             Err(error) => Err(anyhow!(error.to_string())),
         }
+    }
+
+    pub async fn add_migration_record(self, file: &PathBuf) -> anyhow::Result<PutItemOutput> {
+        let file_name = AttributeValue::S(file.as_display().to_string());
+        let executed_at = AttributeValue::S(Utc::now().to_string());
+
+        let request = self.client
+            .put_item()
+            .table_name("migrations")
+            .item("FileName", file_name)
+            .item("ExecutedAt", executed_at);
+
+        let response = request.send().await.context("Failed put item.")?;
+
+        Ok(response)
     }
 
     pub fn factory() -> aws_sdk_dynamodb::Client {
