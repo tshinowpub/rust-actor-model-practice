@@ -3,13 +3,15 @@ use anyhow::{anyhow, Context};
 use aws_sdk_dynamodb::{Credentials, Endpoint, Region};
 use aws_sdk_dynamodb::error::DescribeTableError;
 use aws_sdk_dynamodb::error::DescribeTableErrorKind::ResourceNotFoundException;
-use aws_sdk_dynamodb::model::{AttributeDefinition, AttributeValue, KeySchemaElement, ProvisionedThroughput};
-use aws_sdk_dynamodb::output::{CreateTableOutput, PutItemOutput};
+use aws_sdk_dynamodb::model::{AttributeDefinition, AttributeValue, KeySchemaElement, ProvisionedThroughput, Put, TransactWriteItem};
+use aws_sdk_dynamodb::model::transact_write_item::Builder;
+use aws_sdk_dynamodb::output::{CreateTableOutput, DeleteTableOutput, PutItemOutput, TransactWriteItemsOutput};
 use aws_sdk_dynamodb::types::SdkError::ServiceError;
 use chrono::Utc;
 use http::Uri;
 
 use crate::command::query::create_table::CreateTableQuery;
+use crate::command::query::delete_table::DeleteTableQuery;
 
 #[derive(Debug, PartialEq)]
 pub enum ExistsTableResultType {
@@ -67,6 +69,16 @@ impl Client {
             .await;
 
         Ok(create_table_response?)
+    }
+
+    pub async fn delete_table(self, table_name: &str, query: &DeleteTableQuery) -> anyhow::Result<DeleteTableOutput> {
+        let delete_table_response = self.client
+            .delete_table()
+            .table_name(table_name)
+            .send()
+            .await;
+
+        Ok(delete_table_response?)
     }
 
     pub async fn exists_table(self, table_name: &str) -> anyhow::Result<ExistsTableResultType> {

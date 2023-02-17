@@ -14,6 +14,10 @@ impl MigrateOperationType {
             return Ok(MigrateOperationType::CreateTable)
         }
 
+        if name.to_str().context("Failed to_str name.")?.contains(".delete_table.") {
+            return Ok(MigrateOperationType::DeleteTable)
+        }
+
         Ok(MigrateOperationType::UndefinedOperation(name.to_str().context("Failed to_str name.")?.to_string()))
     }
 }

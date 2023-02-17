@@ -103,7 +103,7 @@ CREATE TABLE IF NOT EXISTS migrations_dynamodb_status (id int, name text, create
     }
 
     async fn migrate(self, target_path: PathBuf) -> anyhow::Result<()> {
-        let files = self.read_migration_files(target_path)?;
+        let files = self.read_migration_files(target_path).context("Cannot read migration file.")?;
 
         for file in files {
             let operation_type = MigrateOperationType::resolve(&file)?;
@@ -121,7 +121,13 @@ CREATE TABLE IF NOT EXISTS migrations_dynamodb_status (id int, name text, create
                     dbg!(output);
                 },
                 MigrateOperationType::DeleteTable => {
-                    let query = self.from_json_file::<DeleteTableQuery>(data);
+                    let query = self.from_json_file::<DeleteTableQuery>(data)?;
+
+                    let output= Client::new().delete_table(query.table_name(), &query).await.context("Cannot delete table. {}")?;
+
+                    Client::new().add_migration_record(&file).await?;
+
+                    dbg!(output);
                 }
                 _ => {}
             }
