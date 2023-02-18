@@ -4,20 +4,12 @@
     {
       "AttributeName": "FileName",
       "AttributeType": "S"
-    },
-    {
-      "AttributeName": "ExecutedAt",
-      "AttributeType": "S"
     }
   ],
   "KeySchema": [
     {
       "KeyType": "HASH",
       "AttributeName": "FileName"
-    },
-    {
-      "KeyType": "RANGE",
-      "AttributeName": "ExecutedAt"
     }
   ],
   "ProvisionedThroughput": {
