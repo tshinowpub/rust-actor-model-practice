@@ -3,6 +3,7 @@ use std::{env, fs};
 use std::borrow::Borrow;
 use std::fmt::Debug;
 use std::path::PathBuf;
+use aws_sdk_dynamodb::model::AttributeValue;
 use serde::Deserialize;
 use sqlx::MySqlPool;
 use thiserror::__private::PathAsDisplay;
@@ -13,7 +14,7 @@ use crate::command::migrate_operation_type::MigrateOperationType;
 use crate::command::migrate_type::MigrateType;
 use crate::command::query::create_table::CreateTableQuery;
 use crate::command::query::delete_table::DeleteTableQuery;
-use crate::command::query::put_item::PutItemQuery;
+use crate::command::query::get_item::{GetItemQuery, Key};
 use crate::settings::Settings;
 
 const RESOURCE_FILE_DIR: &str = "resource";
@@ -108,19 +109,65 @@ CREATE TABLE IF NOT EXISTS migrations_dynamodb_status (id int, name text, create
         for file in files {
             let operation_type = MigrateOperationType::resolve(&file)?;
 
-            let data = std::fs::File::open(&file)?;
+            let file_name = file
+                .file_name()
+                .context(format!("Cannot get filename from PathBuf. {:?}", file))?
+                .to_string_lossy()
+                .to_string();
 
-            match operation_type {
-                MigrateOperationType::CreateTable => {
+            let query = GetItemQuery::new(
+                "migrations".to_string(),
+                Key::new("FileName".to_string(), AttributeValue::S(file_name.clone())),
+                true
+            );
+
+            let get_item_output = Client::new().get_item(&query).await;
+            match (get_item_output, operation_type) {
+                (Ok(_), _) => {
+                    println!("File name {} was already executed. This file was skipped.", file_name)
+                },
+                (_, MigrateOperationType::CreateTable) => {
+                    let data = std::fs::File::open(&file).context(format!("Cannot open migration file. FileName: {}", file_name))?;
+
                     let query = self.from_json_file::<CreateTableQuery>(data)?;
 
-                    let output= Client::new().create_table(query.table_name(), &query).await.context("Cannot create table. {}")?;
+                    let output= Client::new().create_table(query.table_name(), &query).await?;
+
+                    Client::new().add_migration_record(&file).await?;
+
+                    dbg!(output);
+                },
+                (_, MigrateOperationType::DeleteTable) => {
+                    let data = std::fs::File::open(&file).context(format!("Cannot open migration file. FileName: {}", file_name))?;
+
+                    let query = self.from_json_file::<DeleteTableQuery>(data)?;
+
+                    let output= Client::new().delete_table(query.table_name(), &query).await.context("Cannot delete table. {}")?;
+
+                    Client::new().add_migration_record(&file).await?;
+
+                    dbg!(output);
+                }
+                (_, _) => {}
+            }
+        }
+
+            /*
+            match operation_type {
+                MigrateOperationType::CreateTable => {
+                    let data = std::fs::File::open(&file).context(format!("Cannot open migration file. FileName: {}", file_name))?;
+
+                    let query = self.from_json_file::<CreateTableQuery>(data)?;
+
+                    let output= Client::new().create_table(query.table_name(), &query).await?;
 
                     Client::new().add_migration_record(&file).await?;
 
                     dbg!(output);
                 },
                 MigrateOperationType::DeleteTable => {
+                    let data = std::fs::File::open(&file).context(format!("Cannot open migration file. FileName: {}", file_name))?;
+
                     let query = self.from_json_file::<DeleteTableQuery>(data)?;
 
                     let output= Client::new().delete_table(query.table_name(), &query).await.context("Cannot delete table. {}")?;
@@ -131,7 +178,7 @@ CREATE TABLE IF NOT EXISTS migrations_dynamodb_status (id int, name text, create
                 }
                 _ => {}
             }
-        }
+        }*/
 
         Ok(())
     }
