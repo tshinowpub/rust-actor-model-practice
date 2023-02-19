@@ -77,7 +77,7 @@ CREATE TABLE IF NOT EXISTS migrations_dynamodb_status (id int, name text, create
     pub async fn execute(self, _command: &MigrateType, migrate_path: Option<&PathBuf>) -> Output {
         let result= Settings::new();
         if let Err(error) = result {
-            return Output::new(ExitCode::FAILED, format!("Cannot load config. Value ENV was not found. : {}", error.to_string()))
+            return Output::new(ExitCode::FAILED, error.to_string())
         }
 
         let config = result.unwrap();

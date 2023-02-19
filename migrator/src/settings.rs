@@ -1,7 +1,9 @@
+use std::env::VarError;
 use anyhow::{Result, Context};
 use std::str::FromStr;
 use config::{Config, File};
 use serde::Deserialize;
+use thiserror::Error;
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct Migration {
@@ -63,9 +65,18 @@ impl Settings {
 const CONFIG_FILE_PATH: &str = "./config/default.toml";
 const CONFIG_FILE_PREFIX: &str = "./config/";
 
+#[derive(Error, Debug)]
+pub enum EnvNotFoundError {
+    #[error("Environment variable was not set. Env was empty. Error: {0}.")]
+    EnvNameEmpty(#[from] VarError),
+}
+
 impl Settings {
     pub fn new() -> Result<Settings> {
-        let env =  Environment::from_str(std::env::var("ENV").context("No setting config error.")?.as_str()).unwrap();
+        let string_env: String = std::env::var("ENV")
+            .or_else(|error| Err::<std::string::String, EnvNotFoundError>(EnvNotFoundError::EnvNameEmpty(error).into()))?;
+
+        let env: Environment = Environment::from_str(string_env.as_str()).context("")?;
 
         let config = Config::builder()
             .set_default("env", format!("{}", env))?
