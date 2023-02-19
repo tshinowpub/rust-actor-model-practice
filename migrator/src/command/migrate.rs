@@ -74,7 +74,7 @@ CREATE TABLE IF NOT EXISTS migrations_dynamodb_status (id int, name text, create
         Ok(())
     }
 
-    pub async fn execute(self, command: &MigrateType, migrate_path: Option<&PathBuf>) -> Output {
+    pub async fn execute(self, _command: &MigrateType, migrate_path: Option<&PathBuf>) -> Output {
         let result= Settings::new();
         if let Err(error) = result {
             return Output::new(ExitCode::FAILED, format!("Cannot load config. Value ENV was not found. : {}", error.to_string()))
@@ -142,7 +142,7 @@ CREATE TABLE IF NOT EXISTS migrations_dynamodb_status (id int, name text, create
 
                     let query = self.from_json_file::<DeleteTableQuery>(data)?;
 
-                    let output= Client::new().delete_table(query.table_name(), &query).await.context("Cannot delete table. {}")?;
+                    let output= Client::new().delete_table(&query).await.context("Cannot delete table. {}")?;
 
                     Client::new().add_migration_record(&file).await?;
 
@@ -151,34 +151,6 @@ CREATE TABLE IF NOT EXISTS migrations_dynamodb_status (id int, name text, create
                 (_, _) => {}
             }
         }
-
-            /*
-            match operation_type {
-                MigrateOperationType::CreateTable => {
-                    let data = std::fs::File::open(&file).context(format!("Cannot open migration file. FileName: {}", file_name))?;
-
-                    let query = self.from_json_file::<CreateTableQuery>(data)?;
-
-                    let output= Client::new().create_table(query.table_name(), &query).await?;
-
-                    Client::new().add_migration_record(&file).await?;
-
-                    dbg!(output);
-                },
-                MigrateOperationType::DeleteTable => {
-                    let data = std::fs::File::open(&file).context(format!("Cannot open migration file. FileName: {}", file_name))?;
-
-                    let query = self.from_json_file::<DeleteTableQuery>(data)?;
-
-                    let output= Client::new().delete_table(query.table_name(), &query).await.context("Cannot delete table. {}")?;
-
-                    Client::new().add_migration_record(&file).await?;
-
-                    dbg!(output);
-                }
-                _ => {}
-            }
-        }*/
 
         Ok(())
     }

@@ -5,7 +5,6 @@ use aws_sdk_dynamodb::error::DescribeTableError;
 use aws_sdk_dynamodb::error::DescribeTableErrorKind::ResourceNotFoundException;
 use aws_sdk_dynamodb::model::{AttributeDefinition, AttributeValue, KeySchemaElement, ProvisionedThroughput};
 use aws_sdk_dynamodb::output::{CreateTableOutput, DeleteTableOutput, GetItemOutput, PutItemOutput};
-use aws_sdk_dynamodb::paginator::QueryPaginatorItems;
 use aws_sdk_dynamodb::types::SdkError::ServiceError;
 use chrono::Utc;
 use http::Uri;
@@ -72,14 +71,14 @@ impl Client {
         Ok(create_table_response?)
     }
 
-    pub async fn delete_table(self, table_name: &str, query: &DeleteTableQuery) -> anyhow::Result<DeleteTableOutput> {
+    pub async fn delete_table(self, query: &DeleteTableQuery) -> anyhow::Result<DeleteTableOutput> {
         let delete_table_response = self.client
             .delete_table()
-            .table_name(table_name)
+            .table_name(query.table_name())
             .send()
             .await;
 
-        Ok(delete_table_response.context(format!("Failed delete_table. Table name: {}", table_name))?)
+        Ok(delete_table_response.context(format!("Failed delete_table. Table name: {:?}", query.table_name()))?)
     }
 
     pub async fn get_item(self, query: &GetItemQuery) -> anyhow::Result<GetItemOutput> {
@@ -87,7 +86,7 @@ impl Client {
             .get_item()
             .table_name(query.table_name())
             .key(query.key().name(), query.key().value().clone())
-            .consistent_read(true)
+            .consistent_read(*query.consistent_read())
             .send()
             .await;
 

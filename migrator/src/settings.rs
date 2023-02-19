@@ -4,11 +4,6 @@ use config::{Config, File};
 use serde::Deserialize;
 
 #[derive(Debug, Clone, Deserialize)]
-pub struct Log {
-    level: String,
-}
-
-#[derive(Debug, Clone, Deserialize)]
 pub struct Migration {
     driver: Driver,
 }
@@ -55,7 +50,6 @@ pub struct ParseEnvironmentError;
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct Settings {
-    log: Log,
     migration: Migration,
     env: Environment,
 }
