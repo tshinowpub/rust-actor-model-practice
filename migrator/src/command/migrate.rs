@@ -1,12 +1,9 @@
 use anyhow::{anyhow, Context};
 use std::{env, fs};
-use std::borrow::Borrow;
 use std::fmt::Debug;
 use std::path::PathBuf;
 use aws_sdk_dynamodb::model::AttributeValue;
 use serde::Deserialize;
-use sqlx::MySqlPool;
-use std::any::type_name;
 use thiserror::__private::PathAsDisplay;
 
 use crate::command::{ExitCode, Output};
@@ -16,7 +13,7 @@ use crate::command::migrate_type::MigrateType;
 use crate::command::query::create_table::CreateTableQuery;
 use crate::command::query::delete_table::DeleteTableQuery;
 use crate::command::query::get_item::{GetItemQuery, Key};
-use crate::settings::{EnvNotFoundError, Settings};
+use crate::settings::Settings;
 
 const RESOURCE_FILE_DIR: &str = "resource";
 const DEFAULT_MIGRATION_FILE_PATH: &str = "migrations";
@@ -41,26 +38,6 @@ impl Migrate {
         Ok(migration_files)
     }
 
-    async fn create_migration_table_for_mysql(self) -> anyhow::Result<()> {
-        let pool = MySqlPool::connect("mysql://rust:rust@localhost/rust").await?;
-
-        let rows = sqlx::query("SHOW TABLES;")
-            .fetch_all(&pool)
-            .await?;
-
-        sqlx::query(
-        r#"
-CREATE TABLE IF NOT EXISTS migrations_dynamodb_status (id int, name text, created_at DATETIME)
-            "#
-        )
-            .execute(&pool)
-            .await?;
-
-        dbg!(rows);
-
-        Ok(())
-    }
-
     async fn create_migration_table_for_dynamodb(self) -> anyhow::Result<()> {
         for migration_file in self.read_migration_files(self.migration_dir()?).context("")? {
             let data = std::fs::File::open(&migration_file).context("Cannot read migration file.")?;
@@ -76,21 +53,11 @@ CREATE TABLE IF NOT EXISTS migrations_dynamodb_status (id int, name text, create
     }
 
     pub async fn execute(self, _command: &MigrateType, migrate_path: Option<&PathBuf>) -> anyhow::Result<Output> {
-        let config = Settings::new().map_err(|error| anyhow!(error))?;
+        let _ = Settings::new().map_err(|error| anyhow!(error))?;
 
-        if config.borrow().migration().driver().is_mysql() {
-            println!("MySQL selected...");
-
-            let _result = self.create_migration_table_for_mysql().await;
-        }
-
-        if config.borrow().migration().driver().is_dynamodb() {
-            println!("DynamoDB selected...");
-
-            self.create_migration_table_for_dynamodb()
-                .await
-                .map_err(|error| anyhow!(format!("Failed create default migration table. Error: {}", error.to_string())))?;
-        }
+        self.create_migration_table_for_dynamodb()
+            .await
+            .map_err(|error| anyhow!(format!("Failed create default migration table. Error: {}", error.to_string())))?;
 
         let path = self
             .migrate_path_resolver()(migrate_path, PathBuf::from(DEFAULT_MIGRATION_FILE_PATH));
@@ -121,7 +88,7 @@ CREATE TABLE IF NOT EXISTS migrations_dynamodb_status (id int, name text, create
             );
 
             match (Client::new().get_item(&query).await?.item(), operation_type) {
-                (Some(records), _) => {
+                (Some(_records), _) => {
                     println!("File name {} was already executed. This file was skipped.", file_name)
                 },
                 (None, MigrateOperationType::CreateTable) => {
@@ -168,4 +135,3 @@ CREATE TABLE IF NOT EXISTS migrations_dynamodb_status (id int, name text, create
             }
     }
 }
-

@@ -16,7 +16,6 @@ http = "0.2"
 termcolor = "1.1"
 clap = { version = "4.1.1", features = ["derive"] }
 tokio-stream = "0.1"
-sqlx = { version = "0.6.2", features = ["runtime-tokio-rustls", "mysql"] }
 config = "0.13.3"
 strum = "0.24"
 strum_macros = "0.24"

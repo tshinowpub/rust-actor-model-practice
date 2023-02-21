@@ -1,38 +1,9 @@
 use std::env::VarError;
-use anyhow::{Result, Context, anyhow};
+use anyhow::Result;
 use std::str::FromStr;
-use config::{Config, ConfigError, File};
+use config::{Config, File};
 use serde::Deserialize;
 use thiserror::Error;
-
-#[derive(Debug, Clone, Deserialize)]
-pub struct Migration {
-    driver: Driver,
-}
-
-impl Migration {
-    pub fn driver(&self) -> &Driver {
-        &self.driver
-    }
-}
-
-#[derive(Clone, Debug, Deserialize, PartialEq)]
-pub enum Driver {
-    #[serde(rename = "mysql")]
-    Mysql,
-    #[serde(rename = "dynamodb")]
-    Dynamodb,
-}
-
-impl Driver {
-    pub fn is_mysql(&self) -> bool {
-        *self == Driver::Mysql
-    }
-
-    pub fn is_dynamodb(&self) -> bool {
-        *self == Driver::Dynamodb
-    }
-}
 
 #[derive(Clone, Debug, Deserialize, PartialEq, strum_macros::EnumString, strum_macros::Display, strum_macros::IntoStaticStr)]
 pub enum Environment {
@@ -49,14 +20,10 @@ pub enum Environment {
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct Settings {
-    migration: Migration,
     env: Environment,
 }
 
 impl Settings {
-    pub fn migration(&self) -> &Migration {
-        &self.migration
-    }
 }
 
 const CONFIG_FILE_PATH: &str = "./config/default.toml";
