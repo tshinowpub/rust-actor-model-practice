@@ -45,13 +45,9 @@ enum Commands {
 async fn main() -> Result<()> {
     let cli = Cli::parse();
 
-    dbg!("{:?}", &cli);
-
     if let Some(name) = cli.name.as_deref() {
         println!("Value for name: {}", name);
     }
-
-    dbg!("{}", &cli.command);
 
     match &cli.command {
         Some(Commands::Migrate { command, path}) => {
