@@ -6,6 +6,7 @@ use std::path::PathBuf;
 use aws_sdk_dynamodb::model::AttributeValue;
 use serde::Deserialize;
 use sqlx::MySqlPool;
+use std::any::type_name;
 use thiserror::__private::PathAsDisplay;
 
 use crate::command::{ExitCode, Output};
@@ -15,7 +16,7 @@ use crate::command::migrate_type::MigrateType;
 use crate::command::query::create_table::CreateTableQuery;
 use crate::command::query::delete_table::DeleteTableQuery;
 use crate::command::query::get_item::{GetItemQuery, Key};
-use crate::settings::Settings;
+use crate::settings::{EnvNotFoundError, Settings};
 
 const RESOURCE_FILE_DIR: &str = "resource";
 const DEFAULT_MIGRATION_FILE_PATH: &str = "migrations";
@@ -156,9 +157,9 @@ CREATE TABLE IF NOT EXISTS migrations_dynamodb_status (id int, name text, create
     }
 
     fn from_json_file<T: for<'a> Deserialize<'a>>(self, file: std::fs::File) -> anyhow::Result<T> {
-        let aaa: T = serde_json::from_reader(file).context("Cannot parse json file.")?;
+        let result: T = serde_json::from_reader(file).context("Cannot parse json file.")?;
 
-        return Ok(aaa)
+        return Ok(result)
     }
 
     fn migration_dir(self) -> anyhow::Result<PathBuf> {

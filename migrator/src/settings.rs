@@ -1,7 +1,7 @@
 use std::env::VarError;
-use anyhow::{Result, Context};
+use anyhow::{Result, Context, anyhow};
 use std::str::FromStr;
-use config::{Config, File};
+use config::{Config, ConfigError, File};
 use serde::Deserialize;
 use thiserror::Error;
 
@@ -34,7 +34,7 @@ impl Driver {
     }
 }
 
-#[derive(Clone, Debug, Deserialize, PartialEq, strum_macros::EnumString, strum_macros::Display)]
+#[derive(Clone, Debug, Deserialize, PartialEq, strum_macros::EnumString, strum_macros::Display, strum_macros::IntoStaticStr)]
 pub enum Environment {
     #[serde(rename = "develop")]
     #[strum(serialize = "develop")]
@@ -46,9 +46,6 @@ pub enum Environment {
     #[strum(serialize = "prod")]
     Prod,
 }
-
-#[derive(Debug, PartialEq, Eq)]
-pub struct ParseEnvironmentError;
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct Settings {
@@ -69,19 +66,22 @@ const CONFIG_FILE_PREFIX: &str = "./config/";
 pub enum EnvNotFoundError {
     #[error("Environment variable was not set. Env was empty. Error: {0}.")]
     EnvNameEmpty(#[from] VarError),
+    #[error("Cannot parse environment. Env value not supported. Error: {0:?}. Supported only [develop, test, prod].")]
+    CannotParseEnv(#[from] strum::ParseError),
 }
 
 impl Settings {
     pub fn new() -> Result<Settings> {
-        let string_env: String = std::env::var("ENV")
-            .or_else(|error| Err::<std::string::String, EnvNotFoundError>(EnvNotFoundError::EnvNameEmpty(error).into()))?;
+        let string_env = std::env::var("ENV")
+            .map_err(|error| EnvNotFoundError::EnvNameEmpty(error))?;
 
-        let env: Environment = Environment::from_str(string_env.as_str()).context("")?;
+        let env: Environment = Environment::from_str(string_env.as_str())
+            .map_err(|error| EnvNotFoundError::CannotParseEnv(error))?;
 
         let config = Config::builder()
-            .set_default("env", format!("{}", env))?
+            .set_default("env", env.to_string())?
             .add_source(File::with_name(CONFIG_FILE_PATH))
-            .add_source(File::with_name(format!("{}{}.toml", CONFIG_FILE_PREFIX, env).as_str()))
+            .add_source(File::with_name(format!("{}{}.toml", CONFIG_FILE_PREFIX, env.to_string()).as_str()))
             .add_source(config::Environment::with_prefix("APP").separator("_"))
             .build()
             .unwrap();
