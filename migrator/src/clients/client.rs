@@ -3,7 +3,7 @@ use anyhow::{anyhow, Context};
 use aws_sdk_dynamodb::{Credentials, Endpoint, Region};
 use aws_sdk_dynamodb::error::DescribeTableError;
 use aws_sdk_dynamodb::error::DescribeTableErrorKind::ResourceNotFoundException;
-use aws_sdk_dynamodb::model::{AttributeDefinition, AttributeValue, KeySchemaElement, ProvisionedThroughput};
+use aws_sdk_dynamodb::model::{AttributeDefinition, AttributeValue, KeySchemaElement, ProvisionedThroughput, StreamSpecification, StreamViewType};
 use aws_sdk_dynamodb::output::{CreateTableOutput, DeleteTableOutput, GetItemOutput, PutItemOutput};
 use aws_sdk_dynamodb::types::SdkError::ServiceError;
 use chrono::Utc;
@@ -59,12 +59,18 @@ impl Client {
             .write_capacity_units(*input_provisioned_throughput.write_capacity_units())
             .build();
 
+        let stream_specification = StreamSpecification::builder()
+            .stream_enabled(query.stream_specification().stream_enabled())
+            .set_stream_view_type(query.stream_specification().stream_view_type())
+            .build();
+
         let create_table_response = self.client
             .create_table()
             .table_name(table_name)
             .set_attribute_definitions(Some(vec_attribute_definitions))
             .set_key_schema(Some(vec_key_schemas))
             .provisioned_throughput(provisioned_throughput)
+            .stream_specification(stream_specification)
             .send()
             .await;
 

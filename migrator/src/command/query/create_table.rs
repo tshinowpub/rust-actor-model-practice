@@ -1,5 +1,6 @@
 use serde::{Serialize, Deserialize};
-use crate::command::query::dynamodb_query::{AttributeDefinition, KeySchema, ProvisionedThroughput};
+
+use crate::command::query::dynamodb_query::{AttributeDefinition, KeySchema, ProvisionedThroughput, StreamSpecification};
 
 #[derive(Serialize, Deserialize, Debug, Default)]
 pub struct CreateTableQuery {
@@ -11,6 +12,9 @@ pub struct CreateTableQuery {
     key_schemas: Vec<KeySchema>,
     #[serde(rename = "ProvisionedThroughput")]
     provisioned_throughput: ProvisionedThroughput,
+    #[serde(rename = "StreamSpecification")]
+    #[serde(default = "StreamSpecification::default")]
+    stream_specification: StreamSpecification
 }
 
 impl CreateTableQuery {
@@ -28,5 +32,9 @@ impl CreateTableQuery {
 
     pub fn provisioned_throughput(&self) -> &ProvisionedThroughput {
         &self.provisioned_throughput
+    }
+
+    pub fn stream_specification(&self) -> &StreamSpecification {
+        &self.stream_specification
     }
 }

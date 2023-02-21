@@ -1,4 +1,4 @@
-use aws_sdk_dynamodb::model::{KeyType, ScalarAttributeType};
+use aws_sdk_dynamodb::model::{KeyType, ScalarAttributeType, StreamViewType};
 use serde::{Serialize, Deserialize};
 
 #[derive(Serialize, Deserialize, Debug, Default)]
@@ -70,5 +70,31 @@ impl ProvisionedThroughput {
 
     pub fn write_capacity_units(&self) -> &i64 {
         &self.write_capacity_units
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+pub struct StreamSpecification {
+    #[serde(rename = "StreamEnabled")]
+    stream_enabled: Option<bool>,
+    #[serde(rename = "StreamViewType")]
+    stream_view_type: Option<String>
+}
+
+impl StreamSpecification {
+    pub fn stream_enabled(&self) -> bool {
+        &self.stream_enabled == &Some(true)
+    }
+
+    pub fn stream_view_type(&self) -> Option<StreamViewType> {
+        match &self.stream_view_type {
+            _ if &self.stream_enabled == &None || &self.stream_enabled == &Some(false) => None,
+            None => None,
+            Some(stream_view_type) if stream_view_type.to_string() == "KeysOnly" => Some(StreamViewType::KeysOnly),
+            Some(stream_view_type) if stream_view_type.to_string() == "NewAndOldImages" => Some(StreamViewType::NewAndOldImages),
+            Some(stream_view_type) if stream_view_type.to_string() == "NewImage" => Some(StreamViewType::NewImage),
+            Some(stream_view_type) if stream_view_type.to_string() == "OldImage" => Some(StreamViewType::OldImage),
+            Some(stream_view_type) => Some(StreamViewType::Unknown(stream_view_type.to_string()))
+        }
     }
 }

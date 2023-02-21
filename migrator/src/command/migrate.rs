@@ -42,10 +42,12 @@ impl Migrate {
         for migration_file in self.read_migration_files(self.migration_dir()?).context("")? {
             let data = std::fs::File::open(&migration_file).context("Cannot read migration file.")?;
 
-            let query = self.from_json_file::<CreateTableQuery>(data)?;
+            let query = self.from_json_file::<CreateTableQuery>(&data)?;
+
+            dbg!(&query);
 
             if ExistsTableResultType::NotFound == Client::new().exists_table(query.table_name()).await.context("Cannot check exists table.")? {
-                Client::new().create_table(query.table_name(), &query).await.context("Cannot create table. {}")?;
+                Client::new().create_table(query.table_name(), &query).await.context("Cannot create table.")?;
             }
         }
 
@@ -94,7 +96,7 @@ impl Migrate {
                 (None, MigrateOperationType::CreateTable) => {
                     let data = std::fs::File::open(&file).context(format!("Cannot open migration file. FileName: {}", file_name))?;
 
-                    let query = self.from_json_file::<CreateTableQuery>(data)?;
+                    let query = self.from_json_file::<CreateTableQuery>(&data)?;
 
                     Client::new().create_table(query.table_name(), &query).await?;
                     Client::new().add_migration_record(&file).await?;
@@ -102,7 +104,7 @@ impl Migrate {
                 (None, MigrateOperationType::DeleteTable) => {
                     let data = std::fs::File::open(&file).context(format!("Cannot open migration file. FileName: {}", file_name))?;
 
-                    let query = self.from_json_file::<DeleteTableQuery>(data)?;
+                    let query = self.from_json_file::<DeleteTableQuery>(&data)?;
 
                     Client::new().delete_table(&query).await.context("Cannot delete table. {}")?;
                     Client::new().add_migration_record(&file).await?;
@@ -114,8 +116,9 @@ impl Migrate {
         Ok(())
     }
 
-    fn from_json_file<T: for<'a> Deserialize<'a>>(self, file: std::fs::File) -> anyhow::Result<T> {
-        let result: T = serde_json::from_reader(file).context("Cannot parse json file.")?;
+    fn from_json_file<T: for<'a> Deserialize<'a>>(self, file: &std::fs::File) -> anyhow::Result<T> {
+        let result: T = serde_json::from_reader(file)
+            .context(format!("Cannot parse json file. File name: {:?}", file))?;
 
         return Ok(result)
     }
