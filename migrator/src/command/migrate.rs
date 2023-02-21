@@ -1,4 +1,4 @@
-use anyhow::Context;
+use anyhow::{anyhow, Context};
 use std::{env, fs};
 use std::borrow::Borrow;
 use std::fmt::Debug;
@@ -75,13 +75,9 @@ CREATE TABLE IF NOT EXISTS migrations_dynamodb_status (id int, name text, create
         Ok(())
     }
 
-    pub async fn execute(self, _command: &MigrateType, migrate_path: Option<&PathBuf>) -> Output {
-        let result= Settings::new();
-        if let Err(error) = result {
-            return Output::new(ExitCode::FAILED, error.to_string())
-        }
+    pub async fn execute(self, _command: &MigrateType, migrate_path: Option<&PathBuf>) -> anyhow::Result<Output> {
+        let config = Settings::new().map_err(|error| anyhow!(error))?;
 
-        let config = result.unwrap();
         if config.borrow().migration().driver().is_mysql() {
             println!("MySQL selected...");
 
@@ -91,17 +87,19 @@ CREATE TABLE IF NOT EXISTS migrations_dynamodb_status (id int, name text, create
         if config.borrow().migration().driver().is_dynamodb() {
             println!("DynamoDB selected...");
 
-            if let Err(message) = self.create_migration_table_for_dynamodb().await {
-                return Output::new(ExitCode::FAILED, format!("Failed create migration table. : {}", message))
-            }
+            self.create_migration_table_for_dynamodb()
+                .await
+                .map_err(|error| anyhow!(format!("Failed create default migration table. Error: {}", error.to_string())))?;
         }
 
-        let path = self.migrate_path_resolver()(migrate_path, PathBuf::from(DEFAULT_MIGRATION_FILE_PATH));
-        if let Err(message) = self.migrate(path).await {
-            return Output::new(ExitCode::FAILED, format!("Migration failed. : {}", message))
-        }
+        let path = self
+            .migrate_path_resolver()(migrate_path, PathBuf::from(DEFAULT_MIGRATION_FILE_PATH));
 
-        Output::new(ExitCode::SUCCEED, "Migrate succeed.".to_string())
+        self.migrate(path)
+            .await
+            .map_err(|error| anyhow!(format!("Failed user migration data. Error: {}", error.to_string())))?;
+
+        Ok(Output::new(ExitCode::SUCCEED, "All migrate succeed.".to_string()))
     }
 
     async fn migrate(self, target_path: PathBuf) -> anyhow::Result<()> {
@@ -122,34 +120,27 @@ CREATE TABLE IF NOT EXISTS migrations_dynamodb_status (id int, name text, create
                 true
             );
 
-            let get_item_output = Client::new().get_item(&query).await;
-            match (get_item_output, operation_type) {
-                (Ok(_), _) => {
+            match (Client::new().get_item(&query).await?.item(), operation_type) {
+                (Some(records), _) => {
                     println!("File name {} was already executed. This file was skipped.", file_name)
                 },
-                (_, MigrateOperationType::CreateTable) => {
+                (None, MigrateOperationType::CreateTable) => {
                     let data = std::fs::File::open(&file).context(format!("Cannot open migration file. FileName: {}", file_name))?;
 
                     let query = self.from_json_file::<CreateTableQuery>(data)?;
 
-                    let output= Client::new().create_table(query.table_name(), &query).await?;
-
+                    Client::new().create_table(query.table_name(), &query).await?;
                     Client::new().add_migration_record(&file).await?;
-
-                    dbg!(output);
                 },
-                (_, MigrateOperationType::DeleteTable) => {
+                (None, MigrateOperationType::DeleteTable) => {
                     let data = std::fs::File::open(&file).context(format!("Cannot open migration file. FileName: {}", file_name))?;
 
                     let query = self.from_json_file::<DeleteTableQuery>(data)?;
 
-                    let output= Client::new().delete_table(&query).await.context("Cannot delete table. {}")?;
-
+                    Client::new().delete_table(&query).await.context("Cannot delete table. {}")?;
                     Client::new().add_migration_record(&file).await?;
-
-                    dbg!(output);
                 }
-                (_, _) => {}
+                (_, _) => { println!("File name {} was skipped. Unsupported command.", file_name) }
             }
         }
 

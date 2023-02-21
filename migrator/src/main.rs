@@ -57,11 +57,20 @@ async fn main() -> Result<()> {
         Some(Commands::Migrate { command, path}) => {
             let migrate = MigrateCommand::new();
 
-            let output = migrate.execute(command, path.as_ref()).await;
+            let result = migrate.execute(command, path.as_ref()).await;
 
-            println!("{}", output.message());
+            match result {
+                Ok(output) => {
+                    println!("{}", output.message());
 
-            exit(*(output.exit_code()) as i32);
+                    exit(*(output.exit_code()) as i32);
+                },
+                Err(error) => {
+                    println!("{}", error.to_string());
+
+                    exit(1);
+                }
+            }
         },
         Some(Commands::List {}) => {
             let list = ListCommand::new();
