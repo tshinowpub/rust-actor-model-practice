@@ -2967,6 +2967,7 @@ checksum = "447660ad36a13288b1db4d4248e857b510e8c3a225c822ba4fb748c0aafecffd"
 name = "write-grpc"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "async-stream 0.2.1",
  "aws-config",
  "aws-sdk-dynamodb",
@@ -2976,6 +2977,7 @@ dependencies = [
  "rand 0.7.3",
  "serde",
  "serde_json",
+ "thiserror",
  "tokio",
  "tokio-stream",
  "tonic",
