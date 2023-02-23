@@ -6,13 +6,14 @@ use aws_sdk_dynamodb::model::AttributeValue;
 use serde::Deserialize;
 use thiserror::__private::PathAsDisplay;
 
+use dynamodb_client::query::create_table::CreateTableQuery;
+use dynamodb_client::query::delete_table::DeleteTableQuery;
+use dynamodb_client::query::get_item::{GetItemQuery, Key};
+use dynamodb_client::client::{Client, ExistsTableResultType};
+
 use crate::command::{ExitCode, Output};
-use crate::clients::client::{Client, ExistsTableResultType};
 use crate::command::migrate_operation_type::MigrateOperationType;
 use crate::command::migrate_type::MigrateType;
-use crate::command::query::create_table::CreateTableQuery;
-use crate::command::query::delete_table::DeleteTableQuery;
-use crate::command::query::get_item::{GetItemQuery, Key};
 use crate::settings::Settings;
 
 const RESOURCE_FILE_DIR: &str = "resource";

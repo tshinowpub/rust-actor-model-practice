@@ -15,5 +15,7 @@ members = [
     "message",
     "web",
     "read-http-api",
-    "write-grpc"
+    "write-grpc",
+    "migrator",
+    "dynamodb-client"
 ]

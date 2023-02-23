@@ -1,6 +1,6 @@
 use serde::{Serialize, Deserialize};
 
-use crate::command::query::dynamodb_query::{AttributeDefinition, KeySchema, ProvisionedThroughput, StreamSpecification};
+use crate::query::dynamodb_query::{AttributeDefinition, KeySchema, ProvisionedThroughput, StreamSpecification};
 
 #[derive(Serialize, Deserialize, Debug, Default)]
 pub struct CreateTableQuery {
