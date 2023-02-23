@@ -1,6 +1,10 @@
+use anyhow::{Result, Context, anyhow};
 use aws_sdk_dynamodb::error::{DeleteTableError, ListTablesError};
 use aws_sdk_dynamodb::types::SdkError;
 use tokio_stream::StreamExt;
+use dynamodb_client::client::Client;
+use dynamodb_client::query::delete_table::DeleteTableQuery;
+use dynamodb_client::query::list_tables::ListTablesQuery;
 use crate::clients::dynamodb_client_factory::DynamodbClientFactory;
 use crate::command::{ExitCode, Output};
 
@@ -12,41 +16,43 @@ impl Reset {
         Self {}
     }
 
-    pub async fn execute(self) -> Output {
-        return match self.find_table_names().await {
-            Ok(table_names) => {
-                println!("Executing...");
-                println!("--------------------------------------");
-                let mut stream = tokio_stream::iter(table_names);
-                while let Some(name) = stream.next().await {
-                    let result = self.remove_table(&name).await;
-                    match result {
-                        Ok(_) => println!("Table {} was deleted...", name),
-                        Err(error) => return Output::new(ExitCode::FAILED, format!("Remove table failed. {}", error.to_string())),
-                    }
-                }
-                println!("--------------------------------------");
+    pub async fn execute(self) -> Result<Output> {
+        let table_names = self.find_table_names()
+            .await
+            .map_err(|error| anyhow!(format!("Reset failed. : {}", error)))?;
 
-                Output::new(ExitCode::SUCCEED, "Remove table was succeeded.".to_string())
-            },
-            Err(error) => Output::new(ExitCode::FAILED, format!("Reset failed. : {}", error)),
+        println!("Executing...");
+        println!("--------------------------------------");
+        let mut stream = tokio_stream::iter(table_names);
+        while let Some(name) = stream.next().await {
+            self.delete_table(&name)
+                .await
+                .map_err(|error| anyhow!(format!("Remove table failed. : {}", error.to_string())))?;
+
+            println!("Table {} was deleted...", name);
         }
+        println!("--------------------------------------");
+
+        Ok(Output::new(ExitCode::SUCCEED, "Remove table was succeeded.".to_string()))
     }
 
-    async fn find_table_names(self) -> Result<Vec<String>, SdkError<ListTablesError>> {
-        return match DynamodbClientFactory::factory().list_tables().send().await {
-            Ok(output) => {
+    async fn find_table_names(self) -> Result<Vec<String>> {
+        let result = Client::new().list_tables(&ListTablesQuery::default()).await;
+
+        let table_names = result
+            .map(|output|
                 //@todo When there are more than 100 tables.
-                Ok(output.table_names().unwrap_or(&[]).to_vec())
-            },
-            Err(error) => Err(error),
-        }
+                output.table_names().unwrap_or(&[]).to_vec()
+            )?;
+
+        Ok(table_names)
     }
 
-    async fn remove_table(self, table_name: &str) -> Result<(), SdkError<DeleteTableError>> {
-        return match DynamodbClientFactory::factory().delete_table().table_name(table_name).send().await {
-            Ok(_output) => Ok(()),
-            Err(error) => Err(error),
-        }
+    async fn delete_table(self, table_name: &str) -> Result<()> {
+        let query= DeleteTableQuery::new(table_name.to_string());
+
+        Client::new().delete_table(&query).await?;
+
+        Ok(())
     }
 }

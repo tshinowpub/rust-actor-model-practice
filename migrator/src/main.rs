@@ -83,11 +83,19 @@ async fn main() -> Result<()> {
         Some(Commands::Reset {}) => {
             let reset = ResetCommand::new();
 
-            let output = reset.execute().await;
+            let result = reset.execute().await;
+            match result {
+                Ok(output) => {
+                    println!("{}", output.message());
 
-            println!("{}", output.message());
+                    exit(*(output.exit_code()) as i32);
+                },
+                Err(error) => {
+                    println!("{}", error.to_string());
 
-            exit(*(output.exit_code()) as i32);
+                    exit(1);
+                }
+            }
         },
         None => {
             if let Some(name) = cli.name.as_deref() {

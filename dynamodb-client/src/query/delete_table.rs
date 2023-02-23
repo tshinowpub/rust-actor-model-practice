@@ -10,4 +10,8 @@ impl DeleteTableQuery {
     pub fn table_name(&self) -> &str {
         &self.table_name
     }
+
+    pub fn new(table_name: String) -> Self {
+        Self { table_name }
+    }
 }

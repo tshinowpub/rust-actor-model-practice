@@ -18,6 +18,7 @@ Currently, supported commands are
 
 - create_table
 - delete_table
+- reset
 
 ### Run
 

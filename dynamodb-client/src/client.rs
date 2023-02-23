@@ -4,7 +4,7 @@ use aws_sdk_dynamodb::{Credentials, Endpoint, Region};
 use aws_sdk_dynamodb::error::DescribeTableError;
 use aws_sdk_dynamodb::error::DescribeTableErrorKind::ResourceNotFoundException;
 use aws_sdk_dynamodb::model::{AttributeDefinition, AttributeValue, KeySchemaElement, ProvisionedThroughput, StreamSpecification};
-use aws_sdk_dynamodb::output::{CreateTableOutput, DeleteTableOutput, GetItemOutput, PutItemOutput};
+use aws_sdk_dynamodb::output::{CreateTableOutput, DeleteTableOutput, GetItemOutput, ListTablesOutput, PutItemOutput};
 use aws_sdk_dynamodb::types::SdkError::ServiceError;
 use chrono::Utc;
 use http::Uri;
@@ -12,6 +12,7 @@ use http::Uri;
 use crate::query::create_table::CreateTableQuery;
 use crate::query::delete_table::DeleteTableQuery;
 use crate::query::get_item::GetItemQuery;
+use crate::query::list_tables::ListTablesQuery;
 
 #[derive(Debug, PartialEq)]
 pub enum ExistsTableResultType {
@@ -97,6 +98,16 @@ impl Client {
             .await;
 
         Ok(query_response.context(format!("Failed get_item. Table name: {}", query.table_name()))?)
+    }
+
+    pub async fn list_tables(self, _query: &ListTablesQuery) -> anyhow::Result<ListTablesOutput> {
+        let list_tables_response = self.client
+            .list_tables()
+            .send()
+            .await;
+
+        Ok(list_tables_response
+            .map_err(|error| anyhow!(format!("Failed list tables. Error: {}", error.to_string())))?)
     }
 
     pub async fn exists_table(self, table_name: &str) -> anyhow::Result<ExistsTableResultType> {
