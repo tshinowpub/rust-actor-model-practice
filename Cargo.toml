@@ -13,7 +13,6 @@ tonic = "0.8.1"
 [workspace]
 members = [
     "message",
-    "migrator",
     "web",
     "read-http-api",
     "write-grpc"
