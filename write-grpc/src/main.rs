@@ -1,26 +1,30 @@
+use anyhow::{Result, Context};
 use tonic::transport::Server;
 
-mod adapter;
+pub mod adapter;
+pub mod usecase;
 
 use crate::adapter::controllers::add_message_controller::message::message_server::MessageServer;
 use adapter::controllers::add_message_controller::AddMessage;
+use crate::usecase::add_message::AddMessageUsecase;
 
 /**
  * see https://qiita.com/ryuma017/items/1f31f5441ed5df80f1cc
  * https://zenn.dev/magurotuna/books/tokio-tutorial-ja/viewer/hello_tokio
  */
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let addr = "[::1]:50051".parse().unwrap();
+async fn main() -> Result<()> {
+    let addr = "[::1]:50051".parse().context("Failed start grpc server. Error: parse error.")?;
 
-    let message = AddMessage::default();
+    let message = AddMessage::new(AddMessageUsecase::default());
 
     println!("MessageServer listening on {}", addr);
 
     Server::builder()
         .add_service(MessageServer::new(message))
         .serve(addr)
-        .await?;
+        .await
+        .context("Failed start grpc server.")?;
 
     Ok(())
 }

@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::path::PathBuf;
 use anyhow::{anyhow, Context};
 use aws_sdk_dynamodb::{Credentials, Endpoint, Region};
@@ -13,6 +14,7 @@ use crate::query::create_table::CreateTableQuery;
 use crate::query::delete_table::DeleteTableQuery;
 use crate::query::get_item::GetItemQuery;
 use crate::query::list_tables::ListTablesQuery;
+use crate::query::put_item::PutItemQuery;
 
 #[derive(Debug, PartialEq)]
 pub enum ExistsTableResultType {
@@ -98,6 +100,17 @@ impl Client {
             .await;
 
         Ok(query_response.context(format!("Failed get_item. Table name: {}", query.table_name()))?)
+    }
+
+    pub async fn put_item(self, query: PutItemQuery) -> anyhow::Result<PutItemOutput> {
+        let put_item_response = self.client
+            .put_item()
+            .table_name(query.table_name())
+            .set_item(Some(query.items()))
+            .send()
+            .await;
+
+        Ok(put_item_response?)
     }
 
     pub async fn list_tables(self, _query: &ListTablesQuery) -> anyhow::Result<ListTablesOutput> {

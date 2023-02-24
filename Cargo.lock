@@ -3016,6 +3016,7 @@ dependencies = [
  "async-stream 0.2.1",
  "aws-config",
  "aws-sdk-dynamodb",
+ "dynamodb-client",
  "futures-core",
  "futures-util",
  "prost",

@@ -22,6 +22,7 @@ aws-sdk-dynamodb = "0.21.0"
 
 anyhow = { version = "1.0", features = ["backtrace"] }
 thiserror = "1.0"
+dynamodb-client = { path = "../dynamodb-client" }
 
 [build-dependencies]
 tonic-build = "0.8"
