@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use aws_sdk_dynamodb::model::AttributeValue;
+use aws_sdk_dynamodb::model::{AttributeValue, ReturnValue};
 use serde::{Deserialize, Deserializer};
 
 /*
@@ -14,12 +14,13 @@ pub struct PutItemQuery {
 #[derive(Debug)]
 pub struct PutItemQuery {
     table_name: String,
-    items: Items
+    items: Items,
+    return_values: Option<ReturnValue>
 }
 
 impl PutItemQuery {
-    pub fn new(table_name: String, items: Items) -> Self {
-        Self {table_name, items}
+    pub fn new(table_name: String, items: Items, return_values: Option<ReturnValue>) -> Self {
+        Self {table_name, items, return_values}
     }
 
     pub fn table_name(&self) -> &str {
@@ -35,6 +36,13 @@ impl PutItemQuery {
             .collect();
 
         items
+    }
+
+    pub fn return_values(&self) -> ReturnValue {
+        match &self.return_values {
+            Some(value) => value.clone(),
+            None                    => ReturnValue::None
+        }
     }
 }
 
@@ -61,7 +69,8 @@ impl<'de> Deserialize<'de> for PutItemQuery {
 
         Ok(PutItemQuery {
             table_name: helper.table_name,
-            items: hash
+            items: hash,
+            return_values: None
         })
     }
 }
