@@ -107,6 +107,7 @@ impl Client {
             .table_name(query.table_name())
             .set_item(Some(query.items()))
             .return_values(query.return_values())
+            .condition_expression("attribute_not_exists(message_id)")
             .send()
             .await;
 

@@ -21,7 +21,7 @@ impl AddMessageUsecase {
         items.insert("message".to_string(), AttributeValue::S("テストテスト".to_string()));
         items.insert("message_type".to_string(), AttributeValue::S("post".to_string()));
 
-        let query = PutItemQuery::new("Messages".to_string(), items, None);
+        let query = PutItemQuery::new("Messages".to_string(), items, None, None::<String>);
 
         Ok(
             Client::new()

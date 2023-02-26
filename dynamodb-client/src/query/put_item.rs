@@ -15,12 +15,23 @@ pub struct PutItemQuery {
 pub struct PutItemQuery {
     table_name: String,
     items: Items,
-    return_values: Option<ReturnValue>
+    return_values: Option<ReturnValue>,
+    condition_expression: Option<String>
 }
 
 impl PutItemQuery {
-    pub fn new(table_name: String, items: Items, return_values: Option<ReturnValue>) -> Self {
-        Self {table_name, items, return_values}
+    pub fn new(
+        table_name: String,
+        items: Items,
+        return_values: Option<ReturnValue>,
+        condition_expression: Option<impl Into<String>>
+    ) -> Self {
+        Self {
+            table_name,
+            items,
+            return_values,
+            condition_expression: condition_expression.map(|value| value.into())
+        }
     }
 
     pub fn table_name(&self) -> &str {
@@ -70,7 +81,8 @@ impl<'de> Deserialize<'de> for PutItemQuery {
         Ok(PutItemQuery {
             table_name: helper.table_name,
             items: hash,
-            return_values: None
+            return_values: None,
+            condition_expression: None
         })
     }
 }
