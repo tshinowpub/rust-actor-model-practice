@@ -2,22 +2,14 @@
   "TableName" : "Messages",
   "AttributeDefinitions": [
     {
-      "AttributeName": "AccountId",
-      "AttributeType": "S"
-    },
-    {
-      "AttributeName": "PostedAt",
+      "AttributeName": "message_id",
       "AttributeType": "S"
     }
   ],
   "KeySchema": [
     {
       "KeyType": "HASH",
-      "AttributeName": "AccountId"
-    },
-    {
-      "KeyType": "RANGE",
-      "AttributeName": "PostedAt"
+      "AttributeName": "message_id"
     }
   ],
   "ProvisionedThroughput": {

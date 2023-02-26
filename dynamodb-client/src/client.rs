@@ -1,10 +1,9 @@
-use std::collections::HashMap;
 use std::path::PathBuf;
 use anyhow::{anyhow, Context};
 use aws_sdk_dynamodb::{Credentials, Endpoint, Region};
 use aws_sdk_dynamodb::error::DescribeTableError;
 use aws_sdk_dynamodb::error::DescribeTableErrorKind::ResourceNotFoundException;
-use aws_sdk_dynamodb::model::{AttributeDefinition, AttributeValue, KeySchemaElement, ProvisionedThroughput, StreamSpecification};
+use aws_sdk_dynamodb::model::{AttributeDefinition, AttributeValue, KeySchemaElement, ProvisionedThroughput, ReturnValue, StreamSpecification};
 use aws_sdk_dynamodb::output::{CreateTableOutput, DeleteTableOutput, GetItemOutput, ListTablesOutput, PutItemOutput};
 use aws_sdk_dynamodb::types::SdkError::ServiceError;
 use chrono::Utc;
@@ -107,6 +106,7 @@ impl Client {
             .put_item()
             .table_name(query.table_name())
             .set_item(Some(query.items()))
+            .return_values(ReturnValue::AllOld)
             .send()
             .await;
 

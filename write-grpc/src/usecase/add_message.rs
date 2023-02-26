@@ -2,9 +2,9 @@ use std::collections::HashMap;
 use anyhow::Result;
 use aws_sdk_dynamodb::model::AttributeValue;
 use aws_sdk_dynamodb::output::PutItemOutput;
-use tonic::Request;
 use dynamodb_client::client::Client;
 use dynamodb_client::query::put_item::{Items, PutItemQuery};
+use chrono::Utc;
 
 use crate::adapter::controllers::add_message_controller::message::MessageRequest;
 
@@ -12,11 +12,14 @@ use crate::adapter::controllers::add_message_controller::message::MessageRequest
 pub struct AddMessageUsecase {}
 
 impl AddMessageUsecase {
-    pub async fn run(self, _request: Request<MessageRequest>) -> Result<PutItemOutput> {
+    pub async fn run(self, _request: MessageRequest) -> Result<PutItemOutput> {
         let mut items: Items = HashMap::new();
 
-        items.insert("AccountId".to_string(), AttributeValue::S("111".to_string()));
-        items.insert("Message".to_string(), AttributeValue::S("Test message".to_string()));
+        items.insert("message_id".to_string(), AttributeValue::S("1".to_string()));
+        items.insert("account_id".to_string(), AttributeValue::S("111".to_string()));
+        items.insert("posted_at".to_string(), AttributeValue::S(Utc::now().to_string()));
+        items.insert("message".to_string(), AttributeValue::S("テストテスト".to_string()));
+        items.insert("message_type".to_string(), AttributeValue::S("post".to_string()));
 
         let query = PutItemQuery::new("Messages".to_string(), items);
 

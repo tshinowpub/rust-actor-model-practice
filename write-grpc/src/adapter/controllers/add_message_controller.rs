@@ -1,4 +1,3 @@
-use aws_sdk_dynamodb::model::AttributeValue;
 use tonic::{Code, Request, Response, Status};
 use message::{MessageReply, MessageRequest};
 
@@ -27,21 +26,18 @@ impl Message for AddMessage {
     ) -> Result<Response<MessageReply>, Status> {
         println!("Got a request from {:?}", &request.remote_addr());
 
+        let message_request: MessageRequest = request.into_inner();
+
         let output = self
             .usecase
-            .run(request)
+            .run(message_request.clone())
             .await
             .map_err(|error| Status::new(Code::Unavailable, format!("Failed putItem. Error: {}", error.to_string())))?;
 
-        let account_id = output
-            .attributes
-            .ok_or(Status::new(Code::Unavailable, "Failed putItem."))?
-            .get("AccountId")
-            .cloned()
-            .unwrap_or(AttributeValue::S("".to_string()));
+        dbg!(&output);
 
         let reply = message::MessageReply {
-            message: format!("AccountId: {:?}", account_id),
+            message: format!("channel_id: {}", &message_request.channel_id)
         };
 
         dbg!(&reply);
