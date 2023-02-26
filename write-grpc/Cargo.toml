@@ -11,18 +11,16 @@ futures-core = "0.3"
 futures-util = "0.3"
 tokio = { version = "1.0", features = ["full"] }
 tokio-stream = "0.1"
-
 async-stream = "0.2"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 rand = "0.7"
-
 aws-config = "0.51.0"
 aws-sdk-dynamodb = "0.21.0"
-
 anyhow = { version = "1.0", features = ["backtrace"] }
 thiserror = "1.0"
 dynamodb-client = { path = "../dynamodb-client" }
+chrono = "0.4.23"
 
 [build-dependencies]
 tonic-build = "0.8"
