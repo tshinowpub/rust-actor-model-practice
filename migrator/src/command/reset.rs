@@ -1,11 +1,9 @@
-use anyhow::{Result, Context, anyhow};
-use aws_sdk_dynamodb::error::{DeleteTableError, ListTablesError};
-use aws_sdk_dynamodb::types::SdkError;
+use anyhow::{Result, anyhow};
 use tokio_stream::StreamExt;
 use dynamodb_client::client::Client;
 use dynamodb_client::query::delete_table::DeleteTableQuery;
 use dynamodb_client::query::list_tables::ListTablesQuery;
-use crate::clients::dynamodb_client_factory::DynamodbClientFactory;
+
 use crate::command::{ExitCode, Output};
 
 #[derive(Debug, Copy, Clone)]

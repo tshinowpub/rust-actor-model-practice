@@ -9,7 +9,6 @@ use crate::command::list::List as ListCommand;
 use crate::command::reset::Reset as ResetCommand;
 
 mod command;
-mod clients;
 mod settings;
 
 #[derive(Parser, Debug)]

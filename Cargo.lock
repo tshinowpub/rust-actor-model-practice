@@ -1566,6 +1566,7 @@ dependencies = [
  "async-trait",
  "aws-config",
  "aws-sdk-dynamodb",
+ "chrono",
  "clap",
  "config",
  "dynamodb-client",

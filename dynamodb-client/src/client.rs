@@ -138,26 +138,6 @@ impl Client {
         }
     }
 
-    pub async fn add_migration_record(self, file: &PathBuf) -> anyhow::Result<PutItemOutput> {
-        let file_name = AttributeValue::S(file
-            .file_name()
-            .context(format!("Cannot get filename from PathBuf. {:?}", file))?
-            .to_string_lossy()
-            .to_string()
-        );
-        let executed_at = AttributeValue::S(Utc::now().to_string());
-
-        let request = self.client
-            .put_item()
-            .table_name("migrations")
-            .item("FileName", file_name)
-            .item("ExecutedAt", executed_at);
-
-        let response = request.send().await.context("Failed put item.")?;
-
-        Ok(response)
-    }
-
     fn factory() -> aws_sdk_dynamodb::Client {
         let endpoint = Endpoint::immutable(Uri::from_static("http://localhost:8000"));
 
