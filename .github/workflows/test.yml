@@ -7,9 +7,9 @@ jobs:
   test-read-model-updater:
     name: Build & test
     strategy:
-      rust:
-        - stable
-        - 1.66.1
+      matrix:
+        rust:
+          - stable
 
     runs-on: ubuntu-latest
 
