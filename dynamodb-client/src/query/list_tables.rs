@@ -1,3 +1,2 @@
 #[derive(Debug, Default)]
-pub struct ListTablesQuery {
-}
+pub struct ListTablesQuery {}

@@ -12,10 +12,13 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(|| {
         App::new()
             .route("/hello", web::get().to(|| async { "Hello World!" }))
-            .route("/health", web::get().to(controllers::health_controller::index))
+            .route(
+                "/health",
+                web::get().to(controllers::health_controller::index),
+            )
             .service(greet)
     })
-        .bind(("127.0.0.1", 8080))?
-        .run()
-        .await
+    .bind(("127.0.0.1", 8080))?
+    .run()
+    .await
 }

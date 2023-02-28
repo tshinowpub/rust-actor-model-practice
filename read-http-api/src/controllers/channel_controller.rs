@@ -1,10 +1,10 @@
-use actix_web::{HttpResponse, Responder, web, Result};
+use actix_web::{web, HttpResponse, Responder, Result};
 use serde::Serialize;
 
 #[derive(Serialize)]
 struct Channel {
     id: String,
-    name: String
+    name: String,
 }
 
 pub async fn index() -> impl Responder {
@@ -16,7 +16,7 @@ pub async fn index() -> impl Responder {
 pub async fn detail(id: web::Path<String>) -> Result<impl Responder> {
     let channel = Channel {
         id: id.to_string(),
-        name: "test".to_string()
+        name: "test".to_string(),
     };
 
     Ok(web::Json(channel))

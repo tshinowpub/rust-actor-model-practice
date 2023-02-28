@@ -1,6 +1,6 @@
 use anyhow::Result;
-use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
 
 pub mod consumer;
 
@@ -23,6 +23,5 @@ fn main() -> Result<()> {
 #[cfg(test)]
 mod tests {
     #[test]
-    fn test_main() {
-    }
+    fn test_main() {}
 }

@@ -1,5 +1,5 @@
-use tonic::{Code, Request, Response, Status};
 use message::{MessageReply, MessageRequest};
+use tonic::{Code, Request, Response, Status};
 
 use crate::adapter::controllers::add_message_controller::message::message_server::Message;
 use crate::usecase::add_message::AddMessageUsecase;
@@ -9,12 +9,12 @@ pub mod message {
 }
 
 pub struct AddMessage {
-    usecase: AddMessageUsecase
+    usecase: AddMessageUsecase,
 }
 
 impl AddMessage {
     pub fn new(usecase: AddMessageUsecase) -> Self {
-        Self {usecase}
+        Self { usecase }
     }
 }
 
@@ -32,12 +32,17 @@ impl Message for AddMessage {
             .usecase
             .run(message_request.clone())
             .await
-            .map_err(|error| Status::new(Code::Unavailable, format!("Failed putItem. Error: {}", error.to_string())))?;
+            .map_err(|error| {
+                Status::new(
+                    Code::Unavailable,
+                    format!("Failed putItem. Error: {}", error.to_string()),
+                )
+            })?;
 
         dbg!(&output);
 
         let reply = message::MessageReply {
-            message: format!("channel_id: {}", &message_request.channel_id)
+            message: format!("channel_id: {}", &message_request.channel_id),
         };
 
         dbg!(&reply);

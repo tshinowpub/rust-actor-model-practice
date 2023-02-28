@@ -1,11 +1,11 @@
 use anyhow::{anyhow, Result};
 
 #[derive(Debug, Default)]
-pub struct Consumer {
-}
+pub struct Consumer {}
 
 impl Consumer {
     pub fn consume(self) -> Result<()> {
+        Ok(())
     }
 }
 

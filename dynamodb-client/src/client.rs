@@ -1,13 +1,18 @@
-use std::path::PathBuf;
 use anyhow::{anyhow, Context};
-use aws_sdk_dynamodb::{Credentials, Endpoint, Region};
 use aws_sdk_dynamodb::error::DescribeTableError;
 use aws_sdk_dynamodb::error::DescribeTableErrorKind::ResourceNotFoundException;
-use aws_sdk_dynamodb::model::{AttributeDefinition, AttributeValue, KeySchemaElement, ProvisionedThroughput, StreamSpecification};
-use aws_sdk_dynamodb::output::{CreateTableOutput, DeleteTableOutput, GetItemOutput, ListTablesOutput, PutItemOutput};
+use aws_sdk_dynamodb::model::{
+    AttributeDefinition, AttributeValue, KeySchemaElement, ProvisionedThroughput,
+    StreamSpecification,
+};
+use aws_sdk_dynamodb::output::{
+    CreateTableOutput, DeleteTableOutput, GetItemOutput, ListTablesOutput, PutItemOutput,
+};
 use aws_sdk_dynamodb::types::SdkError::ServiceError;
+use aws_sdk_dynamodb::{Credentials, Endpoint, Region};
 use chrono::Utc;
 use http::Uri;
+use std::path::PathBuf;
 
 use crate::query::create_table::CreateTableQuery;
 use crate::query::delete_table::DeleteTableQuery;
@@ -27,31 +32,42 @@ pub struct Client {
 }
 
 impl Client {
-    pub fn new () -> Client {
-        Self { client: Client::factory() }
+    pub fn new() -> Client {
+        Self {
+            client: Client::factory(),
+        }
     }
 
-    pub async fn create_table(self, table_name: &str, query: &CreateTableQuery) -> anyhow::Result<CreateTableOutput> {
+    pub async fn create_table(
+        self,
+        table_name: &str,
+        query: &CreateTableQuery,
+    ) -> anyhow::Result<CreateTableOutput> {
         println!("---Called create_table---");
 
         println!("TableName: {}", table_name);
 
-        let vec_attribute_definitions = query.attribute_definitions().to_vec().iter()
-            .map(|attribute_definition| (
-                AttributeDefinition::builder()
+        let vec_attribute_definitions = query
+            .attribute_definitions()
+            .to_vec()
+            .iter()
+            .map(|attribute_definition| {
+                (AttributeDefinition::builder()
                     .attribute_name(attribute_definition.attribute_name()))
                 .attribute_type(attribute_definition.attribute_type())
                 .build()
-            )
+            })
             .collect::<Vec<_>>();
 
-        let vec_key_schemas = query.key_schemas().to_vec().iter()
-            .map(|key_schema| (
-                KeySchemaElement::builder()
-                    .attribute_name(key_schema.attribute_name()))
-                .key_type(key_schema.key_type())
-                .build()
-            )
+        let vec_key_schemas = query
+            .key_schemas()
+            .to_vec()
+            .iter()
+            .map(|key_schema| {
+                (KeySchemaElement::builder().attribute_name(key_schema.attribute_name()))
+                    .key_type(key_schema.key_type())
+                    .build()
+            })
             .collect::<Vec<_>>();
 
         let input_provisioned_throughput = query.provisioned_throughput();
@@ -66,7 +82,8 @@ impl Client {
             .set_stream_view_type(query.stream_specification().stream_view_type())
             .build();
 
-        let create_table_response = self.client
+        let create_table_response = self
+            .client
             .create_table()
             .table_name(table_name)
             .set_attribute_definitions(Some(vec_attribute_definitions))
@@ -80,17 +97,22 @@ impl Client {
     }
 
     pub async fn delete_table(self, query: &DeleteTableQuery) -> anyhow::Result<DeleteTableOutput> {
-        let delete_table_response = self.client
+        let delete_table_response = self
+            .client
             .delete_table()
             .table_name(query.table_name())
             .send()
             .await;
 
-        Ok(delete_table_response.context(format!("Failed delete_table. Table name: {:?}", query.table_name()))?)
+        Ok(delete_table_response.context(format!(
+            "Failed delete_table. Table name: {:?}",
+            query.table_name()
+        ))?)
     }
 
     pub async fn get_item(self, query: &GetItemQuery) -> anyhow::Result<GetItemOutput> {
-        let query_response = self.client
+        let query_response = self
+            .client
             .get_item()
             .table_name(query.table_name())
             .key(query.key().name(), query.key().value().clone())
@@ -98,11 +120,15 @@ impl Client {
             .send()
             .await;
 
-        Ok(query_response.context(format!("Failed get_item. Table name: {}", query.table_name()))?)
+        Ok(query_response.context(format!(
+            "Failed get_item. Table name: {}",
+            query.table_name()
+        ))?)
     }
 
     pub async fn put_item(self, query: PutItemQuery) -> anyhow::Result<PutItemOutput> {
-        let put_item_response = self.client
+        let put_item_response = self
+            .client
             .put_item()
             .table_name(query.table_name())
             .set_item(Some(query.items()))
@@ -115,17 +141,16 @@ impl Client {
     }
 
     pub async fn list_tables(self, _query: &ListTablesQuery) -> anyhow::Result<ListTablesOutput> {
-        let list_tables_response = self.client
-            .list_tables()
-            .send()
-            .await;
+        let list_tables_response = self.client.list_tables().send().await;
 
-        Ok(list_tables_response
-            .map_err(|error| anyhow!(format!("Failed list tables. Error: {}", error.to_string())))?)
+        Ok(list_tables_response.map_err(|error| {
+            anyhow!(format!("Failed list tables. Error: {}", error.to_string()))
+        })?)
     }
 
     pub async fn exists_table(self, table_name: &str) -> anyhow::Result<ExistsTableResultType> {
-        let describe_table_response = self.client
+        let describe_table_response = self
+            .client
             .describe_table()
             .table_name(table_name)
             .send()
@@ -133,9 +158,16 @@ impl Client {
 
         return match describe_table_response {
             Ok(_) => Ok(ExistsTableResultType::Found),
-            Err(ServiceError { err: DescribeTableError { kind: ResourceNotFoundException(_) , .. }, raw: _ })  => Ok(ExistsTableResultType::NotFound),
+            Err(ServiceError {
+                err:
+                    DescribeTableError {
+                        kind: ResourceNotFoundException(_),
+                        ..
+                    },
+                raw: _,
+            }) => Ok(ExistsTableResultType::NotFound),
             Err(error) => Err(anyhow!(error.to_string())),
-        }
+        };
     }
 
     fn factory() -> aws_sdk_dynamodb::Client {

@@ -1,6 +1,6 @@
-use std::collections::HashMap;
 use aws_sdk_dynamodb::model::{AttributeValue, ReturnValue};
 use serde::{Deserialize, Deserializer};
+use std::collections::HashMap;
 
 /*
 #[derive(Deserialize, Debug)]
@@ -16,7 +16,7 @@ pub struct PutItemQuery {
     table_name: String,
     items: Items,
     return_values: Option<ReturnValue>,
-    condition_expression: Option<String>
+    condition_expression: Option<String>,
 }
 
 impl PutItemQuery {
@@ -24,13 +24,13 @@ impl PutItemQuery {
         table_name: String,
         items: Items,
         return_values: Option<ReturnValue>,
-        condition_expression: Option<impl Into<String>>
+        condition_expression: Option<impl Into<String>>,
     ) -> Self {
         Self {
             table_name,
             items,
             return_values,
-            condition_expression: condition_expression.map(|value| value.into())
+            condition_expression: condition_expression.map(|value| value.into()),
         }
     }
 
@@ -52,7 +52,7 @@ impl PutItemQuery {
     pub fn return_values(&self) -> ReturnValue {
         match &self.return_values {
             Some(value) => value.clone(),
-            None                    => ReturnValue::None
+            None => ReturnValue::None,
         }
     }
 }
@@ -64,8 +64,9 @@ pub type Items = HashMap<String, AttributeValue>;
  */
 impl<'de> Deserialize<'de> for PutItemQuery {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where D: Deserializer<'de> {
-
+    where
+        D: Deserializer<'de>,
+    {
         #[derive(Deserialize)]
         struct PutItemQueryHelper {
             #[serde(rename = "TableName")]
@@ -82,7 +83,7 @@ impl<'de> Deserialize<'de> for PutItemQuery {
             table_name: helper.table_name,
             items: hash,
             return_values: None,
-            condition_expression: None
+            condition_expression: None,
         })
     }
 }
@@ -103,4 +104,3 @@ impl From<AwsAttributeValue> for AttributeValue {
         AttributeValue::Unknown
     }
 }*/
-

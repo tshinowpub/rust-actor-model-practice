@@ -1,4 +1,4 @@
-use actix_web::{get, App, HttpServer, HttpResponse, web};
+use actix_web::{get, web, App, HttpResponse, HttpServer};
 
 mod controllers;
 
@@ -14,10 +14,16 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(|| {
         App::new()
             .service(index)
-            .service(web::resource("/channels/{id}").route(web::get().to(controllers::channel_controller::detail)))
-            .route("/channels", web::get().to(controllers::channel_controller::index))
+            .service(
+                web::resource("/channels/{id}")
+                    .route(web::get().to(controllers::channel_controller::detail)),
+            )
+            .route(
+                "/channels",
+                web::get().to(controllers::channel_controller::index),
+            )
     })
-        .bind(("127.0.0.1", 8080))?
-        .run()
-        .await
+    .bind(("127.0.0.1", 8080))?
+    .run()
+    .await
 }

@@ -1,12 +1,12 @@
 use aws_sdk_dynamodb::model::{KeyType, ScalarAttributeType, StreamViewType};
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Default)]
 pub struct ProvisionedThroughput {
     #[serde(rename = "ReadCapacityUnits")]
     read_capacity_units: i64,
     #[serde(rename = "WriteCapacityUnits")]
-    write_capacity_units: i64
+    write_capacity_units: i64,
 }
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
@@ -14,7 +14,7 @@ pub struct KeySchema {
     #[serde(rename = "AttributeName")]
     attribute_name: String,
     #[serde(rename = "KeyType")]
-    key_type: String
+    key_type: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
@@ -22,7 +22,7 @@ pub struct AttributeDefinition {
     #[serde(rename = "AttributeName")]
     attribute_name: String,
     #[serde(rename = "AttributeType")]
-    attribute_type: String
+    attribute_type: String,
 }
 
 impl KeySchema {
@@ -42,7 +42,6 @@ impl KeySchema {
         }
     }
 }
-
 
 impl AttributeDefinition {
     pub fn attribute_name(&self) -> &str {
@@ -78,7 +77,7 @@ pub struct StreamSpecification {
     #[serde(rename = "StreamEnabled")]
     stream_enabled: Option<bool>,
     #[serde(rename = "StreamViewType")]
-    stream_view_type: Option<String>
+    stream_view_type: Option<String>,
 }
 
 impl StreamSpecification {
@@ -90,11 +89,19 @@ impl StreamSpecification {
         match &self.stream_view_type {
             _ if &self.stream_enabled == &None || &self.stream_enabled == &Some(false) => None,
             None => None,
-            Some(stream_view_type) if stream_view_type.to_string() == "KeysOnly" => Some(StreamViewType::KeysOnly),
-            Some(stream_view_type) if stream_view_type.to_string() == "NewAndOldImages" => Some(StreamViewType::NewAndOldImages),
-            Some(stream_view_type) if stream_view_type.to_string() == "NewImage" => Some(StreamViewType::NewImage),
-            Some(stream_view_type) if stream_view_type.to_string() == "OldImage" => Some(StreamViewType::OldImage),
-            Some(stream_view_type) => Some(StreamViewType::Unknown(stream_view_type.to_string()))
+            Some(stream_view_type) if stream_view_type.to_string() == "KeysOnly" => {
+                Some(StreamViewType::KeysOnly)
+            }
+            Some(stream_view_type) if stream_view_type.to_string() == "NewAndOldImages" => {
+                Some(StreamViewType::NewAndOldImages)
+            }
+            Some(stream_view_type) if stream_view_type.to_string() == "NewImage" => {
+                Some(StreamViewType::NewImage)
+            }
+            Some(stream_view_type) if stream_view_type.to_string() == "OldImage" => {
+                Some(StreamViewType::OldImage)
+            }
+            Some(stream_view_type) => Some(StreamViewType::Unknown(stream_view_type.to_string())),
         }
     }
 }

@@ -3,9 +3,9 @@ use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 use std::process::exit;
 
-use crate::command::migrate_type::MigrateType;
-use crate::command::migrate::Migrate as MigrateCommand;
 use crate::command::list::List as ListCommand;
+use crate::command::migrate::Migrate as MigrateCommand;
+use crate::command::migrate_type::MigrateType;
 use crate::command::reset::Reset as ResetCommand;
 
 mod command;
@@ -30,14 +30,11 @@ enum Commands {
         path: Option<PathBuf>,
     },
     /// Display command list.
-    List {
-    },
+    List {},
     /// Create migrate file.
-    Create {
-    },
+    Create {},
     /// Reset migration.
-    Reset {
-    }
+    Reset {},
 }
 
 #[tokio::main]
@@ -49,7 +46,7 @@ async fn main() -> Result<()> {
     }
 
     match &cli.command {
-        Some(Commands::Migrate { command, path}) => {
+        Some(Commands::Migrate { command, path }) => {
             let migrate = MigrateCommand::new();
 
             let result = migrate.execute(command, path.as_ref()).await;
@@ -59,14 +56,14 @@ async fn main() -> Result<()> {
                     println!("{}", output.message());
 
                     exit(*(output.exit_code()) as i32);
-                },
+                }
                 Err(error) => {
                     println!("{}", error.to_string());
 
                     exit(1);
                 }
             }
-        },
+        }
         Some(Commands::List {}) => {
             let list = ListCommand::new();
 
@@ -75,10 +72,8 @@ async fn main() -> Result<()> {
             println!("{}", output.message());
 
             exit(*(output.exit_code()) as i32);
-        },
-        Some(Commands::Create {}) => {
-            exit(0)
-        },
+        }
+        Some(Commands::Create {}) => exit(0),
         Some(Commands::Reset {}) => {
             let reset = ResetCommand::new();
 
@@ -88,14 +83,14 @@ async fn main() -> Result<()> {
                     println!("{}", output.message());
 
                     exit(*(output.exit_code()) as i32);
-                },
+                }
                 Err(error) => {
                     println!("{}", error.to_string());
 
                     exit(1);
                 }
             }
-        },
+        }
         None => {
             if let Some(name) = cli.name.as_deref() {
                 println!("Command {} was not found.", name);

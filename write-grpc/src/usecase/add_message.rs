@@ -1,10 +1,10 @@
-use std::collections::HashMap;
 use anyhow::Result;
 use aws_sdk_dynamodb::model::AttributeValue;
 use aws_sdk_dynamodb::output::PutItemOutput;
+use chrono::Utc;
 use dynamodb_client::client::Client;
 use dynamodb_client::query::put_item::{Items, PutItemQuery};
-use chrono::Utc;
+use std::collections::HashMap;
 
 use crate::adapter::controllers::add_message_controller::message::MessageRequest;
 
@@ -16,17 +16,25 @@ impl AddMessageUsecase {
         let mut items: Items = HashMap::new();
 
         items.insert("message_id".to_string(), AttributeValue::S("1".to_string()));
-        items.insert("account_id".to_string(), AttributeValue::S("111".to_string()));
-        items.insert("posted_at".to_string(), AttributeValue::S(Utc::now().to_string()));
-        items.insert("message".to_string(), AttributeValue::S("テストテスト".to_string()));
-        items.insert("message_type".to_string(), AttributeValue::S("post".to_string()));
+        items.insert(
+            "account_id".to_string(),
+            AttributeValue::S("111".to_string()),
+        );
+        items.insert(
+            "posted_at".to_string(),
+            AttributeValue::S(Utc::now().to_string()),
+        );
+        items.insert(
+            "message".to_string(),
+            AttributeValue::S("テストテスト".to_string()),
+        );
+        items.insert(
+            "message_type".to_string(),
+            AttributeValue::S("post".to_string()),
+        );
 
         let query = PutItemQuery::new("Messages".to_string(), items, None, None::<String>);
 
-        Ok(
-            Client::new()
-                .put_item(query)
-                .await?
-        )
+        Ok(Client::new().put_item(query).await?)
     }
 }
