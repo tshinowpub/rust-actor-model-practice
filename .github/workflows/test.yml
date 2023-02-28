@@ -27,4 +27,7 @@ jobs:
       - name: Build & test
         env:
           RUST_VERSION: ${{ matrix.rust }}
-        run: ls -la
+        run: |
+          ls -la
+          cd read-model-updater
+          cargo test
