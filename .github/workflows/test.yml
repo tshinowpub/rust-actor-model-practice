@@ -1,0 +1,13 @@
+name: test
+run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
+on: [push]
+jobs:
+  test-read-model-updater:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+          uses: actions/checkout@v3
+      - name: test
+        - run: |
+            ls -la
+            pwd
