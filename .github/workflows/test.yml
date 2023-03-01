@@ -27,6 +27,11 @@ jobs:
           default: true
           profile: minimal
 
+      - name: Start docker container
+        run: |
+          docker-compose up -d
+          docker-compose ps
+
       - name: Build & test
         env:
           RUST_VERSION: ${{ matrix.rust }}
