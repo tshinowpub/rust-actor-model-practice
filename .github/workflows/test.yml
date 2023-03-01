@@ -33,6 +33,8 @@ jobs:
           docker-compose -f docker-compose-ci.yml ps
 
       - name: Create DynamoDB table.
+        env:
+          ENV: develop
         run: |
           cd migrator
           cargo run migrate up
