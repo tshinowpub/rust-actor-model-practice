@@ -1,0 +1,32 @@
+# https://moznion.hatenadiary.com/entry/2017/12/17/224043
+version: "3.9"
+
+services:
+  dynamodb:
+    container_name: dynamodb
+    image: amazon/dynamodb-local:1.20.0
+    command: -jar DynamoDBLocal.jar -sharedDb -dbPath . -optimizeDbBeforeStartup
+    volumes:
+      - dynamodb:/data
+    ports:
+      - "8000:8000"
+
+  mysql:
+    container_name: mysql
+    image: mysql:8.0-debian
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: rust
+      MYSQL_PASSWORD: rust
+      MYSQL_DATABASE: rust
+      TZ: "Asia/Tokyo"
+    volumes:
+      - mysql:/data/mysql
+    command: mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_general_ci --sql_mode="STRICT_TRANS_TABLES"
+
+volumes:
+  dynamodb:
+    driver: local
+  mysql:
