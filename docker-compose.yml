@@ -46,6 +46,10 @@ services:
     environment:
       PMA_HOSTS: mysql
 
+  localstack:
+    container_name: localstack
+    image: localstack/localstack:1.4
+
 volumes:
   dynamodb:
     driver: local
