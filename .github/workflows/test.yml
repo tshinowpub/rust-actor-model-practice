@@ -10,6 +10,9 @@ jobs:
       matrix:
         rust:
           - stable
+        crate:
+          - read-model-updater
+          - dynamodb-client
 
     runs-on: ubuntu-latest
 
@@ -29,5 +32,5 @@ jobs:
           RUST_VERSION: ${{ matrix.rust }}
         run: |
           ls -la
-          cd read-model-updater
+          cd ${{ matrix.crate }}
           cargo test

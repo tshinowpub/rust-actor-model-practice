@@ -182,3 +182,12 @@ impl Client {
         aws_sdk_dynamodb::Client::from_conf(dynamodb_local_config)
     }
 }
+
+#[cfg(test)]
+mod tests {
+
+    #[test]
+    fn stream() -> anyhow::Result<()> {
+        Ok(())
+    }
+}
