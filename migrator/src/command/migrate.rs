@@ -36,29 +36,39 @@ impl Migrate {
     ) -> anyhow::Result<Output> {
         let _ = Settings::new().map_err(|error| anyhow!(error))?;
 
-        self.create_migration_table_for_dynamodb()
-            .await
-            .map_err(|error| {
-                anyhow!(format!(
+        match _command.clone() {
+            MigrateType::Up => {
+                self.create_migration_table_for_dynamodb()
+                    .await
+                    .map_err(|error| {
+                        anyhow!(format!(
                     "Failed create default migration table. Error: {}",
                     error.to_string()
                 ))
-            })?;
+                    })?;
 
-        let path =
-            self.migrate_path_resolver()(migrate_path, PathBuf::from(DEFAULT_MIGRATION_FILE_PATH));
+                let path =
+                    self.migrate_path_resolver()(migrate_path, PathBuf::from(DEFAULT_MIGRATION_FILE_PATH));
 
-        self.migrate(path).await.map_err(|error| {
-            anyhow!(format!(
-                "Failed user migration data. Error: {}",
-                error.to_string()
-            ))
-        })?;
+                self.migrate(path).await.map_err(|error| {
+                    anyhow!(format!(
+                        "Failed user migration data. Error: {}",
+                        error.to_string()
+                    ))
+                })?;
 
-        Ok(Output::new(
-            ExitCode::SUCCEED,
-            "All migrate succeed.".to_string(),
-        ))
+                Ok(Output::new(
+                    ExitCode::SUCCEED,
+                    "All migrate succeed.".to_string(),
+                ))
+            },
+            MigrateType::Down => {
+                Ok(Output::new(
+                    ExitCode::SUCCEED,
+                    "Migrate down succeed.".to_string(),
+                ))
+            }
+        }
     }
 
     fn read_migration_files(&self, current_path: PathBuf) -> anyhow::Result<Vec<PathBuf>> {

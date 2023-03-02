@@ -2,17 +2,15 @@ use anyhow::{anyhow, Context};
 use aws_sdk_dynamodb::error::DescribeTableError;
 use aws_sdk_dynamodb::error::DescribeTableErrorKind::ResourceNotFoundException;
 use aws_sdk_dynamodb::model::{
-    AttributeDefinition, AttributeValue, KeySchemaElement, ProvisionedThroughput,
-    StreamSpecification,
+    AttributeDefinition, KeySchemaElement, ProvisionedThroughput, StreamSpecification,
 };
 use aws_sdk_dynamodb::output::{
-    CreateTableOutput, DeleteTableOutput, GetItemOutput, ListTablesOutput, PutItemOutput,
+    CreateTableOutput, DeleteTableOutput, GetItemOutput, ListTablesOutput,
+    PutItemOutput,
 };
 use aws_sdk_dynamodb::types::SdkError::ServiceError;
 use aws_sdk_dynamodb::{Credentials, Endpoint, Region};
-use chrono::Utc;
 use http::Uri;
-use std::path::PathBuf;
 
 use crate::query::create_table::CreateTableQuery;
 use crate::query::delete_table::DeleteTableQuery;
@@ -185,9 +183,8 @@ impl Client {
 
 #[cfg(test)]
 mod tests {
-
-    #[test]
-    fn stream() -> anyhow::Result<()> {
+    #[tokio::test]
+    async fn exists_table() -> anyhow::Result<()> {
         Ok(())
     }
 }
