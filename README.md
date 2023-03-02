@@ -39,7 +39,7 @@ $ set AWS_SECRET_ACCESS_KEY={Your AWS_SECRET_ACCESS_KEY}
 
 Once you are done, do the following.
 
-#### Execute
+#### Usage
 
 ```shell
 $ cd path/to/rust-actor-model-practice

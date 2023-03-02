@@ -20,7 +20,7 @@ Currently, supported commands are
 - delete_table
 - reset
 
-### Run
+### Usage
 
 ```shell
 $ export ENV=develop
