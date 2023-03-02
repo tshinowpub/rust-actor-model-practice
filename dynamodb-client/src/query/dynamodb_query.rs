@@ -86,22 +86,16 @@ impl StreamSpecification {
     }
 
     pub fn stream_view_type(&self) -> Option<StreamViewType> {
-        match &self.stream_view_type {
-            _ if &self.stream_enabled == &None || &self.stream_enabled == &Some(false) => None,
-            None => None,
-            Some(stream_view_type) if stream_view_type.to_string() == "KeysOnly" => {
-                Some(StreamViewType::KeysOnly)
-            }
-            Some(stream_view_type) if stream_view_type.to_string() == "NewAndOldImages" => {
-                Some(StreamViewType::NewAndOldImages)
-            }
-            Some(stream_view_type) if stream_view_type.to_string() == "NewImage" => {
-                Some(StreamViewType::NewImage)
-            }
-            Some(stream_view_type) if stream_view_type.to_string() == "OldImage" => {
-                Some(StreamViewType::OldImage)
-            }
-            Some(stream_view_type) => Some(StreamViewType::Unknown(stream_view_type.to_string())),
-        }
+        let option = &self.stream_view_type;
+
+        option
+            .as_ref()
+            .map(|x| match x.as_str() {
+                "KeysOnly"          => StreamViewType::KeysOnly,
+                "NewAndOldImages"   => StreamViewType::NewAndOldImages,
+                "NewImage"          => StreamViewType::NewImage,
+                "OldImage"          => StreamViewType::OldImage,
+                unknown_value=> StreamViewType::Unknown(unknown_value.to_string())
+            })
     }
 }
