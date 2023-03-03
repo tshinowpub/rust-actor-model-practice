@@ -191,8 +191,15 @@ impl Client {
 
 #[cfg(test)]
 mod tests {
+    use crate::client::{Client, ExistsTableResultType};
+
     #[tokio::test]
-    async fn exists_table() -> anyhow::Result<()> {
-        Ok(())
+    async fn test_exists_table() {
+        let exists_table_result_type = Client::new()
+            .exists_table("migrations")
+            .await
+            .unwrap();
+
+        assert_eq!(ExistsTableResultType::Found, exists_table_result_type)
     }
 }
