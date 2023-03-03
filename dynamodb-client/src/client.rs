@@ -29,6 +29,12 @@ pub struct Client {
     client: aws_sdk_dynamodb::Client,
 }
 
+impl Default for Client {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Client {
     pub fn new() -> Client {
         Self {
@@ -102,10 +108,10 @@ impl Client {
             .send()
             .await;
 
-        Ok(delete_table_response.context(format!(
+        delete_table_response.context(format!(
             "Failed delete_table. Table name: {:?}",
             query.table_name()
-        ))?)
+        ))
     }
 
     pub async fn get_item(self, query: &GetItemQuery) -> anyhow::Result<GetItemOutput> {
@@ -118,10 +124,10 @@ impl Client {
             .send()
             .await;
 
-        Ok(query_response.context(format!(
+        query_response.context(format!(
             "Failed get_item. Table name: {}",
             query.table_name()
-        ))?)
+        ))
     }
 
     pub async fn put_item(self, query: PutItemQuery) -> anyhow::Result<PutItemOutput> {
@@ -139,11 +145,13 @@ impl Client {
     }
 
     pub async fn list_tables(self, _query: &ListTablesQuery) -> anyhow::Result<ListTablesOutput> {
-        let list_tables_response = self.client.list_tables().send().await;
-
-        Ok(list_tables_response.map_err(|error| {
-            anyhow!(format!("Failed list tables. Error: {}", error.to_string()))
-        })?)
+        self.client
+            .list_tables()
+            .send()
+            .await
+            .map_err(|error| {
+                anyhow!(format!("Failed list tables. Error: {}", error))
+            })
     }
 
     pub async fn exists_table(self, table_name: &str) -> anyhow::Result<ExistsTableResultType> {
@@ -154,7 +162,7 @@ impl Client {
             .send()
             .await;
 
-        return match describe_table_response {
+        match describe_table_response {
             Ok(_) => Ok(ExistsTableResultType::Found),
             Err(ServiceError {
                 err:
@@ -165,7 +173,7 @@ impl Client {
                 raw: _,
             }) => Ok(ExistsTableResultType::NotFound),
             Err(error) => Err(anyhow!(error.to_string())),
-        };
+        }
     }
 
     fn factory() -> aws_sdk_dynamodb::Client {

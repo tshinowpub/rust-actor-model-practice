@@ -82,7 +82,7 @@ pub struct StreamSpecification {
 
 impl StreamSpecification {
     pub fn stream_enabled(&self) -> bool {
-        &self.stream_enabled == &Some(true)
+        self.stream_enabled == Some(true)
     }
 
     pub fn stream_view_type(&self) -> Option<StreamViewType> {
