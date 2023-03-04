@@ -55,6 +55,10 @@ impl PutItemQuery {
             None => ReturnValue::None,
         }
     }
+
+    pub fn condition_expression(&self) -> &Option<String> {
+        &self.condition_expression
+    }
 }
 
 pub type Items = HashMap<String, AttributeValue>;

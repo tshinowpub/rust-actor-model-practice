@@ -131,13 +131,20 @@ impl Client {
     }
 
     pub async fn put_item(&self, query: PutItemQuery) -> anyhow::Result<PutItemOutput> {
-        let put_item_response = self
+        let condition_expression = query.condition_expression().as_ref();
+
+        let mut put_item = self
             .client
             .put_item()
             .table_name(query.table_name())
             .set_item(Some(query.items()))
-            .return_values(query.return_values())
-            .condition_expression("attribute_not_exists(message_id)")
+            .return_values(query.return_values());
+
+        if let Some(expression) = condition_expression {
+            put_item = put_item.condition_expression(expression.to_string());
+        }
+
+        let put_item_response = put_item
             .send()
             .await;
 
@@ -191,7 +198,72 @@ impl Client {
 
 #[cfg(test)]
 mod tests {
+    use std::collections::HashMap;
+    use anyhow::Context;
+    use aws_sdk_dynamodb::model::AttributeValue;
+    use chrono::Utc;
+    use uuid::Uuid;
     use crate::client::{Client, ExistsTableResultType};
+    use crate::query::get_item::{GetItemQuery, Key};
+    use crate::query::put_item::{Items, PutItemQuery};
+
+    #[tokio::test]
+    async fn test_put_item() -> anyhow::Result<()> {
+        let mut items: Items = HashMap::new();
+
+        let uuid = Uuid::new_v4();
+
+        items.insert("message_id".to_string(), AttributeValue::S(uuid.to_string()));
+        items.insert(
+            "account_id".to_string(),
+            AttributeValue::S("111".to_string()),
+        );
+        items.insert(
+            "posted_at".to_string(),
+            AttributeValue::S(Utc::now().to_string()),
+        );
+        items.insert(
+            "message".to_string(),
+            AttributeValue::S("テストテスト".to_string()),
+        );
+        items.insert(
+            "message_type".to_string(),
+            AttributeValue::S("post".to_string()),
+        );
+
+        let query = PutItemQuery::new(
+            "Messages".to_string(),
+            items,
+            None,
+            None::<String>
+        );
+
+        let client = Client::new();
+
+        client
+            .put_item(query)
+            .await?;
+
+        let get_item_query= GetItemQuery::new(
+            "Messages".to_string(),
+            Key::new("message_id".to_string(), AttributeValue::S(uuid.to_string())),
+            true
+        );
+
+        let response = client
+            .get_item(&get_item_query)
+            .await?;
+
+        let records = response
+            .item()
+            .context(format!("Record not found when added put item. message_id: {}", uuid.to_string()))?;
+
+        let message_id = records.get("message_id").context("")?;
+
+        dbg!(message_id);
+
+        Ok(())
+    }
 
     #[tokio::test]
     async fn test_exists_table() {

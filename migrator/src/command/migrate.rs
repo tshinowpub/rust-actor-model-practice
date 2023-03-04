@@ -30,7 +30,7 @@ impl Migrate {
     }
 
     pub async fn execute(
-        self,
+        &self,
         _command: &MigrateType,
         migrate_path: Option<&PathBuf>,
     ) -> anyhow::Result<Output> {

@@ -4,8 +4,8 @@ on:
   push:
 
 jobs:
-  test-read-model-updater:
-    name: Build & test
+  test:
+    name: build & test
     strategy:
       matrix:
         rust:
