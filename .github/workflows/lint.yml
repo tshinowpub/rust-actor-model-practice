@@ -1,0 +1,36 @@
+name: test
+
+on:
+  push:
+
+jobs:
+  lint:
+    name: lint
+    strategy:
+      matrix:
+        rust:
+          - stable
+        crate:
+          - read-model-updater
+          - dynamodb-client
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ matrix.rust }}
+          default: true
+          profile: minimal
+
+      - name: lint
+        env:
+          RUST_VERSION: ${{ matrix.rust }}
+        run: |
+          ls -la
+          cd ${{ matrix.crate }}
+          cargo clippy --all --all-features --tests -- -D clippy::all -D warnings --no-deps
