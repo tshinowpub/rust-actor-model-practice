@@ -202,4 +202,14 @@ mod tests {
 
         assert_eq!(ExistsTableResultType::Found, exists_table_result_type)
     }
+
+    #[tokio::test]
+    async fn test_exists_table_not_found() {
+        let exists_table_result_type = Client::new()
+            .exists_table("test")
+            .await
+            .unwrap();
+
+        assert_eq!(ExistsTableResultType::NotFound, exists_table_result_type)
+    }
 }
