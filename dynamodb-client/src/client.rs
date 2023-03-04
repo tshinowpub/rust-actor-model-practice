@@ -43,7 +43,7 @@ impl Client {
     }
 
     pub async fn create_table(
-        self,
+        &self,
         table_name: &str,
         query: &CreateTableQuery,
     ) -> anyhow::Result<CreateTableOutput> {
@@ -100,7 +100,7 @@ impl Client {
         Ok(create_table_response?)
     }
 
-    pub async fn delete_table(self, query: &DeleteTableQuery) -> anyhow::Result<DeleteTableOutput> {
+    pub async fn delete_table(&self, query: &DeleteTableQuery) -> anyhow::Result<DeleteTableOutput> {
         let delete_table_response = self
             .client
             .delete_table()
@@ -114,7 +114,7 @@ impl Client {
         ))
     }
 
-    pub async fn get_item(self, query: &GetItemQuery) -> anyhow::Result<GetItemOutput> {
+    pub async fn get_item(&self, query: &GetItemQuery) -> anyhow::Result<GetItemOutput> {
         let query_response = self
             .client
             .get_item()
@@ -130,7 +130,7 @@ impl Client {
         ))
     }
 
-    pub async fn put_item(self, query: PutItemQuery) -> anyhow::Result<PutItemOutput> {
+    pub async fn put_item(&self, query: PutItemQuery) -> anyhow::Result<PutItemOutput> {
         let put_item_response = self
             .client
             .put_item()
@@ -144,7 +144,7 @@ impl Client {
         Ok(put_item_response?)
     }
 
-    pub async fn list_tables(self, _query: &ListTablesQuery) -> anyhow::Result<ListTablesOutput> {
+    pub async fn list_tables(&self, _query: &ListTablesQuery) -> anyhow::Result<ListTablesOutput> {
         self.client
             .list_tables()
             .send()
@@ -154,7 +154,7 @@ impl Client {
             })
     }
 
-    pub async fn exists_table(self, table_name: &str) -> anyhow::Result<ExistsTableResultType> {
+    pub async fn exists_table(&self, table_name: &str) -> anyhow::Result<ExistsTableResultType> {
         let describe_table_response = self
             .client
             .describe_table()
