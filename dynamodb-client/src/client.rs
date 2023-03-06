@@ -252,7 +252,7 @@ mod tests {
 
         let records = response
             .item()
-            .context(format!("Record not found when added put item. message_id: {}", uuid.to_string()))?;
+            .context(format!("Record not found when added put item. message_id: {}", uuid))?;
 
         let message_id = records.get("message_id").context("")?;
 
