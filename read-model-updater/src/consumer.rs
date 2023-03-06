@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 
 #[derive(Debug, Default)]
 pub struct Consumer {}
