@@ -27,6 +27,10 @@ jobs:
           default: true
           profile: minimal
 
+      - name: Install protobuf-compiler
+        run: |
+          sudo apt-get install protobuf-compiler
+
       - name: Start docker container
         run: |
           docker-compose -f docker-compose-ci.yml up -d
