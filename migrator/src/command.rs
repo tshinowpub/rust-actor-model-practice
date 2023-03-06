@@ -26,7 +26,7 @@ impl Output {
 
 #[derive(Debug, Copy, Clone)]
 pub enum ExitCode {
-    SUCCEED = 0,
+    Succeed = 0,
     #[allow(dead_code)]
-    FAILED = 1,
+    Failed = 1,
 }

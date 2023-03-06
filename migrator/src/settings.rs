@@ -57,7 +57,7 @@ impl Settings {
             .set_default("env", env.to_string())?
             .add_source(File::with_name(CONFIG_FILE_PATH))
             .add_source(File::with_name(
-                format!("{}{}.toml", CONFIG_FILE_PREFIX, env.to_string()).as_str(),
+                format!("{}{}.toml", CONFIG_FILE_PREFIX, env).as_str(),
             ))
             .add_source(config::Environment::with_prefix("APP").separator("_"))
             .build()

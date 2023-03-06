@@ -25,7 +25,7 @@ impl Reset {
         let mut stream = tokio_stream::iter(table_names);
         while let Some(name) = stream.next().await {
             self.delete_table(&name).await.map_err(|error| {
-                anyhow!(format!("Remove table failed. : {}", error.to_string()))
+                anyhow!(format!("Remove table failed. : {}", error))
             })?;
 
             println!("Table {} was deleted...", name);
@@ -33,7 +33,7 @@ impl Reset {
         println!("--------------------------------------");
 
         Ok(Output::new(
-            ExitCode::SUCCEED,
+            ExitCode::Succeed,
             "Remove table was succeeded.".to_string(),
         ))
     }

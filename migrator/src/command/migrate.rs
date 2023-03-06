@@ -43,7 +43,7 @@ impl Migrate {
                     .map_err(|error| {
                         anyhow!(format!(
                     "Failed create default migration table. Error: {}",
-                    error.to_string()
+                    error
                 ))
                     })?;
 
@@ -58,13 +58,13 @@ impl Migrate {
                 })?;
 
                 Ok(Output::new(
-                    ExitCode::SUCCEED,
+                    ExitCode::Succeed,
                     "All migrate succeed.".to_string(),
                 ))
             },
             MigrateType::Down => {
                 Ok(Output::new(
-                    ExitCode::SUCCEED,
+                    ExitCode::Succeed,
                     "Migrate down succeed.".to_string(),
                 ))
             }
@@ -182,7 +182,7 @@ impl Migrate {
         let result: T = serde_json::from_reader(file)
             .context(format!("Cannot parse json file. File name: {:?}", file))?;
 
-        return Ok(result);
+        Ok(result)
     }
 
     fn migration_dir(self) -> anyhow::Result<PathBuf> {

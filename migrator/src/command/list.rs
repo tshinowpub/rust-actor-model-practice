@@ -15,6 +15,6 @@ impl List {
             migrate Execute migration..
         ";
 
-        Output::new(ExitCode::SUCCEED, message.to_string())
+        Output::new(ExitCode::Succeed, message.to_string())
     }
 }

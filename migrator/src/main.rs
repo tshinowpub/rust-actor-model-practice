@@ -58,7 +58,7 @@ async fn main() -> Result<()> {
                     exit(*(output.exit_code()) as i32);
                 }
                 Err(error) => {
-                    println!("{}", error.to_string());
+                    println!("{}", error);
 
                     exit(1);
                 }
@@ -85,7 +85,7 @@ async fn main() -> Result<()> {
                     exit(*(output.exit_code()) as i32);
                 }
                 Err(error) => {
-                    println!("{}", error.to_string());
+                    println!("{}", error);
 
                     exit(1);
                 }
