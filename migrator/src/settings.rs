@@ -48,10 +48,10 @@ pub enum EnvNotFoundError {
 impl Settings {
     pub fn new() -> Result<Settings> {
         let string_env =
-            std::env::var("ENV").map_err(|error| EnvNotFoundError::EnvNameEmpty(error))?;
+            std::env::var("ENV").map_err(EnvNotFoundError::EnvNameEmpty)?;
 
         let env: Environment = Environment::from_str(string_env.as_str())
-            .map_err(|error| EnvNotFoundError::CannotParseEnv(error))?;
+            .map_err(EnvNotFoundError::CannotParseEnv)?;
 
         let config = Config::builder()
             .set_default("env", env.to_string())?
