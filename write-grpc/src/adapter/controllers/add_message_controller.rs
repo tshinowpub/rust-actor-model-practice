@@ -35,7 +35,7 @@ impl Message for AddMessage {
             .map_err(|error| {
                 Status::new(
                     Code::Unavailable,
-                    format!("Failed putItem. Error: {}", error.to_string()),
+                    format!("Failed putItem. Error: {}", error),
                 )
             })?;
 

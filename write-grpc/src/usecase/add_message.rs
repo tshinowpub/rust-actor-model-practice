@@ -35,6 +35,6 @@ impl AddMessageUsecase {
 
         let query = PutItemQuery::new("Messages".to_string(), items, None, None::<String>);
 
-        Ok(Client::new().put_item(query).await?)
+        Client::new().put_item(query).await
     }
 }
