@@ -1,5 +1,5 @@
 use anyhow::{Context, Result};
-use std::path::PathBuf;
+use std::path::Path;
 
 #[derive(PartialEq, Debug, Clone)]
 pub enum MigrateOperationType {
@@ -9,7 +9,7 @@ pub enum MigrateOperationType {
 }
 
 impl MigrateOperationType {
-    pub fn resolve(name: &PathBuf) -> Result<MigrateOperationType> {
+    pub fn resolve(name: &Path) -> Result<MigrateOperationType> {
         if name
             .to_str()
             .context("Failed to_str name.")?

@@ -51,10 +51,7 @@ impl Migrate {
                     self.migrate_path_resolver()(migrate_path, PathBuf::from(DEFAULT_MIGRATION_FILE_PATH));
 
                 self.migrate(path).await.map_err(|error| {
-                    anyhow!(format!(
-                        "Failed user migration data. Error: {}",
-                        error.to_string()
-                    ))
+                    anyhow!(format!("Failed user migration data. Error: {}", error))
                 })?;
 
                 Ok(Output::new(
@@ -79,7 +76,7 @@ impl Migrate {
 
         let mut migration_files = vec![];
         for directory in directories {
-            migration_files.push(directory.context(format!("Cannot resolve path."))?.path());
+            migration_files.push(directory.context("Cannot resolve path.")?.path());
         }
 
         Ok(migration_files)
