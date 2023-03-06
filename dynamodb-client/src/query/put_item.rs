@@ -21,13 +21,13 @@ pub struct PutItemQuery {
 
 impl PutItemQuery {
     pub fn new(
-        table_name: String,
+        table_name: impl Into<String>,
         items: Items,
         return_values: Option<ReturnValue>,
         condition_expression: Option<impl Into<String>>,
     ) -> Self {
         Self {
-            table_name,
+            table_name: table_name.into(),
             items,
             return_values,
             condition_expression: condition_expression.map(|value| value.into()),
