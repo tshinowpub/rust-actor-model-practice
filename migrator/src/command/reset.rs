@@ -49,7 +49,7 @@ impl Reset {
     }
 
     async fn delete_table(self, table_name: &str) -> Result<()> {
-        let query = DeleteTableQuery::new(table_name.to_string());
+        let query = DeleteTableQuery::new(table_name);
 
         Client::new().delete_table(&query).await?;
 

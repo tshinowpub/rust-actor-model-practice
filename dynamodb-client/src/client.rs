@@ -241,8 +241,8 @@ mod tests {
             .await?;
 
         let get_item_query= GetItemQuery::new(
-            "Messages".to_string(),
-            Key::new("message_id".to_string(), AttributeValue::S(uuid.to_string())),
+            "Messages",
+            Key::new("message_id", AttributeValue::S(uuid.to_string())),
             true
         );
 

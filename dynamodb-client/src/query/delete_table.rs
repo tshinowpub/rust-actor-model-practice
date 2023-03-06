@@ -11,7 +11,7 @@ impl DeleteTableQuery {
         &self.table_name
     }
 
-    pub fn new(table_name: String) -> Self {
-        Self { table_name }
+    pub fn new(table_name: impl Into<String>) -> Self {
+        Self { table_name: table_name.into() }
     }
 }

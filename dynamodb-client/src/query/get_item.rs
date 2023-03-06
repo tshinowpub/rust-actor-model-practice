@@ -26,9 +26,9 @@ impl GetItemQuery {
         &self.consistent_read
     }
 
-    pub fn new(table_name: String, key: Key, consistent_read: bool) -> Self {
+    pub fn new(table_name: impl Into<String>, key: Key, consistent_read: bool) -> Self {
         Self {
-            table_name,
+            table_name: table_name.into(),
             key,
             consistent_read,
         }
@@ -44,7 +44,7 @@ impl Key {
         &self.value
     }
 
-    pub fn new(name: String, value: AttributeValue) -> Self {
-        Self { name, value }
+    pub fn new(name: impl Into<String>, value: AttributeValue) -> Self {
+        Self { name: name.into(), value }
     }
 }
