@@ -9,6 +9,7 @@ use crate::command::migrate_type::MigrateType;
 use crate::command::reset::Reset as ResetCommand;
 
 mod command;
+mod parser;
 mod settings;
 
 #[derive(Parser, Debug)]

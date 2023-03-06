@@ -7,7 +7,6 @@ use dynamodb_client::query::create_table::CreateTableQuery;
 use dynamodb_client::query::delete_table::DeleteTableQuery;
 use dynamodb_client::query::get_item::{GetItemQuery, Key};
 use dynamodb_client::query::put_item::{Items, PutItemQuery};
-use serde::Deserialize;
 use std::fmt::Debug;
 use std::path::PathBuf;
 use std::{env, fs};
@@ -16,6 +15,7 @@ use thiserror::__private::PathAsDisplay;
 use crate::command::migrate_operation_type::MigrateOperationType;
 use crate::command::migrate_type::MigrateType;
 use crate::command::{ExitCode, Output};
+use crate::parser::Parser;
 use crate::settings::Settings;
 
 const RESOURCE_FILE_DIR: &str = "resource";
@@ -90,7 +90,7 @@ impl Migrate {
             let data =
                 std::fs::File::open(&migration_file).context("Cannot read migration file.")?;
 
-            let query = self.from_json_file::<CreateTableQuery>(&data)?;
+            let query = Parser::from_json_file::<CreateTableQuery>(&data)?;
 
             dbg!(&query);
 
@@ -145,7 +145,7 @@ impl Migrate {
                         file_name
                     ))?;
 
-                    let query = self.from_json_file::<CreateTableQuery>(&data)?;
+                    let query = Parser::from_json_file::<CreateTableQuery>(&data)?;
 
                     Client::new()
                         .create_table(query.table_name(), &query)
@@ -158,7 +158,7 @@ impl Migrate {
                         file_name
                     ))?;
 
-                    let query = self.from_json_file::<DeleteTableQuery>(&data)?;
+                    let query = Parser::from_json_file::<DeleteTableQuery>(&data)?;
 
                     Client::new()
                         .delete_table(&query)
@@ -173,13 +173,6 @@ impl Migrate {
         }
 
         Ok(())
-    }
-
-    fn from_json_file<T: for<'a> Deserialize<'a>>(self, file: &std::fs::File) -> anyhow::Result<T> {
-        let result: T = serde_json::from_reader(file)
-            .context(format!("Cannot parse json file. File name: {:?}", file))?;
-
-        Ok(result)
     }
 
     fn migration_dir(self) -> anyhow::Result<PathBuf> {
