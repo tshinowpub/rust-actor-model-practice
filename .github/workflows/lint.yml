@@ -27,6 +27,10 @@ jobs:
           default: true
           profile: minimal
 
+      - name: Install protobuf-compiler
+        run: |
+          apt-get install protobuf-compiler
+
       - name: lint
         env:
           RUST_VERSION: ${{ matrix.rust }}
