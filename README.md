@@ -1,4 +1,7 @@
 # OverView
+
+![Workflow Status](https://github.com/tshinowpub/rust-cqrs-practice/workflows/test/badge.svg)
+
 practice rust cqrs.
 
 ## Environment building
