@@ -28,6 +28,7 @@ pub enum Environment {
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct Settings {
+    #[allow(dead_code)]
     env: Environment,
 }
 
