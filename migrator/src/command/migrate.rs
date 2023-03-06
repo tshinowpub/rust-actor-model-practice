@@ -31,12 +31,12 @@ impl Migrate {
 
     pub async fn execute(
         &self,
-        _command: &MigrateType,
+        command: &MigrateType,
         migrate_path: Option<&PathBuf>,
     ) -> anyhow::Result<Output> {
         let _ = Settings::new().map_err(|error| anyhow!(error))?;
 
-        match _command.clone() {
+        match command.to_owned() {
             MigrateType::Up => {
                 self.create_migration_table_for_dynamodb()
                     .await
@@ -132,6 +132,8 @@ impl Migrate {
                 Key::new("FileName".to_string(), AttributeValue::S(file_name.clone())),
                 true,
             );
+
+            println!("Running file name {}", &file_name);
 
             match (Client::new().get_item(&query).await?.item(), operation_type) {
                 (Some(_), _) => {

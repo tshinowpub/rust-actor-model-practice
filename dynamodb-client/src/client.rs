@@ -47,10 +47,6 @@ impl Client {
         table_name: &str,
         query: &CreateTableQuery,
     ) -> anyhow::Result<CreateTableOutput> {
-        println!("---Called create_table---");
-
-        println!("TableName: {}", table_name);
-
         let vec_attribute_definitions = query
             .attribute_definitions()
             .to_vec()
