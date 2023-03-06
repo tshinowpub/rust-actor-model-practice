@@ -1,0 +1,17 @@
+[tasks.clean]
+command = "cargo"
+args = ["clean"]
+
+[tasks.test]
+command = "cargo"
+args = ["test"]
+
+[tasks.clean-test]
+command = "cargo"
+args = ["test"]
+dependencies = ["clean"]
+
+[tasks.clippy]
+command = "cargo"
+description = "clippyを実行する"
+args = ["clippy", "--all", "--all-features", "--tests", "--", "-D", "clippy::all", "-D", "warnings"]
