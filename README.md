@@ -10,7 +10,7 @@ Install protobuf so that you can compile Proto files according to your environme
 
 [protocolbuffers/protobuf](https://github.com/protocolbuffers/protobuf)
 
-## Execution method
+## Usage
 
 ### read-http-api
 ```shell
@@ -26,25 +26,19 @@ $ cargo run --package write-grpc
 
 ### migrator
 
-First you need to set ``AWS_ACCESS_KEY_ID`` and ``AWS_SECRET_ACCESS_KEY``.
-
-#### Mac/Linux
+- Mac/Linux
 ```shell
-$ export AWS_ACCESS_KEY_ID={Your AWS_ACCESS_KEY_ID}
-$ export AWS_SECRET_ACCESS_KEY={Your AWS_SECRET_ACCESS_KEY}
+$ export ENV=develop
 ```
 
-#### Windows
+- Windows
 ```shell
-$ set AWS_ACCESS_KEY_ID={Your AWS_ACCESS_KEY_ID}
-$ set AWS_SECRET_ACCESS_KEY={Your AWS_SECRET_ACCESS_KEY}
+$ set ENV=develop
 ```
-
-Once you are done, do the following.
-
-#### Usage
 
 ```shell
 $ cd path/to/rust-actor-model-practice
 $ cargo run --package migrator
 ```
+
+Once you are done, do the following.
