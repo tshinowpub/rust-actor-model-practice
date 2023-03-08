@@ -4,6 +4,8 @@
 
 practice rust cqrs.
 
+- https://aws.amazon.com/jp/blogs/news/build-a-cqrs-event-store-with-amazon-dynamodb/
+
 ## Environment building
 
 Install protobuf so that you can compile Proto files according to your environment.

@@ -1,27 +1,27 @@
-use anyhow::Result;
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::Arc;
+use aws_lambda_events::event::dynamodb::Event;
+use lambda_runtime::{run, service_fn, Error, LambdaEvent};
 
-pub mod consumer;
 
-/*
- * @see https://docs.rs/signal-hook/latest/signal_hook/
- * @see https://dev.to/talzvon/handling-unix-kill-signals-in-rust-55g6
- * @see https://qiita.com/qnighy/items/4bbbb20e71cf4ae527b9
- */
-fn main() -> Result<()> {
-    let term = Arc::new(AtomicBool::new(false));
-    signal_hook::flag::register(signal_hook::consts::SIGTERM, Arc::clone(&term))?;
-
-    while !term.load(Ordering::Relaxed) {
-        println!("Hello, world!");
-    }
+/// This is the main body for the function.
+/// Write your code inside it.
+/// There are some code example in the following URLs:
+/// - https://github.com/awslabs/aws-lambda-rust-runtime/tree/main/examples
+/// - https://github.com/aws-samples/serverless-rust-demo/
+async fn function_handler(event: LambdaEvent<Event>) -> Result<(), Error> {
+    // Extract some useful information from the request
 
     Ok(())
 }
 
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn test_main() {}
+#[tokio::main]
+async fn main() -> Result<(), Error> {
+    tracing_subscriber::fmt()
+        .with_max_level(tracing::Level::INFO)
+        // disable printing the name of the module in every log line.
+        .with_target(false)
+        // disabling time is handy because CloudWatch will add the ingestion time.
+        .without_time()
+        .init();
+
+    run(service_fn(function_handler)).await
 }
