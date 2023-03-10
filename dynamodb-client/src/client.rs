@@ -180,7 +180,7 @@ impl Client {
     }
 
     fn factory() -> aws_sdk_dynamodb::Client {
-        let endpoint = Endpoint::immutable(Uri::from_static("http://localhost:8000"));
+        let endpoint = Endpoint::immutable(Uri::from_static("http://localhost:4566"));
 
         let dynamodb_local_config = aws_sdk_dynamodb::Config::builder()
             .region(Region::new("ap-northeast-1"))
@@ -228,7 +228,7 @@ mod tests {
         );
 
         let query = PutItemQuery::new(
-            "Messages".to_string(),
+            "Messages",
             items,
             None,
             None::<String>
