@@ -1,6 +1,28 @@
 use aws_lambda_events::event::dynamodb::Event;
 use lambda_runtime::{run, service_fn, Error, LambdaEvent};
+use serde::{Deserialize, Serialize};
 
+/// This is a made-up example. Requests come into the runtime as unicode
+/// strings in json format, which can map to any structure that implements `serde::Deserialize`
+/// The runtime pays no attention to the contents of the request payload.
+#[derive(Deserialize)]
+struct Request {
+}
+
+/// This is a made-up example of what a response structure may look like.
+/// There is no restriction on what it can be. The runtime requires responses
+/// to be serialized into json. The runtime pays no attention
+/// to the contents of the response payload.
+#[derive(Serialize)]
+struct Response {
+    statusCode: i32,
+    body: String,
+}
+
+#[derive(Serialize)]
+struct Body {
+    message: String,
+}
 
 /// This is the main body for the function.
 /// Write your code inside it.
@@ -9,6 +31,10 @@ use lambda_runtime::{run, service_fn, Error, LambdaEvent};
 /// - https://github.com/aws-samples/serverless-rust-demo/
 async fn function_handler(event: LambdaEvent<Event>) -> Result<(), Error> {
     // Extract some useful information from the request
+    let resp = Response {
+        statusCode: 200,
+        body: "Hello World!".to_string(),
+    };
 
     Ok(())
 }
