@@ -5,6 +5,7 @@ use chrono::Utc;
 use dynamodb_client::client::Client;
 use dynamodb_client::query::put_item::{Items, PutItemQuery};
 use std::collections::HashMap;
+use uuid::Uuid;
 
 use crate::adapter::controllers::add_message_controller::message::MessageRequest;
 
@@ -15,10 +16,14 @@ impl AddMessageUsecase {
     pub async fn run(self, _request: MessageRequest) -> Result<PutItemOutput> {
         let mut items: Items = HashMap::new();
 
-        items.insert("message_id".to_string(), AttributeValue::S("1".to_string()));
+        items.insert("message_id".to_string(), AttributeValue::S(Uuid::new_v4().to_string()));
         items.insert(
             "account_id".to_string(),
             AttributeValue::S("111".to_string()),
+        );
+        items.insert(
+            "channel_id".to_string(),
+            AttributeValue::S("1".to_string()),
         );
         items.insert(
             "posted_at".to_string(),
