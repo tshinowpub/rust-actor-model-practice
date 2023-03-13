@@ -3,6 +3,7 @@ use config::{Config, File};
 use serde::Deserialize;
 use std::env::VarError;
 use std::str::FromStr;
+use dotenvy::dotenv;
 use thiserror::Error;
 
 #[derive(
@@ -47,6 +48,8 @@ pub enum EnvNotFoundError {
 
 impl Settings {
     pub fn new() -> Result<Settings> {
+        dotenv().ok();
+
         let string_env =
             std::env::var("ENV").map_err(EnvNotFoundError::EnvNameEmpty)?;
 

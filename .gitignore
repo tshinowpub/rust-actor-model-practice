@@ -1,7 +1,7 @@
 !.gitkeep
 /migrator/debug
+/migrator/.env
 /target
 .idea
 rust-actor-model-practice.iml
 rust-cqrs-practice.iml
-
