@@ -1,0 +1,7 @@
+[log]
+level = "debug"
+
+[dynamodb]
+scheme = "http"
+host = "localhost"
+port = "8000"
