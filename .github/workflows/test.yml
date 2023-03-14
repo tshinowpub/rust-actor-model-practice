@@ -36,9 +36,11 @@ jobs:
           docker-compose -f docker-compose-ci.yml up -d
           docker-compose -f docker-compose-ci.yml ps
 
+      - name: Create env file.
+        run: |
+          mv .env.ci .env
+
       - name: Create DynamoDB table.
-        env:
-          ENV: develop
         run: |
           cd migrator
           cargo run migrate up
