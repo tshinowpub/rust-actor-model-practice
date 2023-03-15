@@ -50,10 +50,6 @@ async fn main() -> Result<()> {
 
     let settings = Settings::new().map_err(|error| anyhow!(error))?;
 
-    if let Some(name) = cli.name.as_deref() {
-        println!("Value for name: {}", name);
-    }
-
     let client = settings
         .dynamodb()
         .uri()
