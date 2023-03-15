@@ -11,8 +11,11 @@ pub struct Output {
 }
 
 impl Output {
-    pub fn new(exit_code: ExitCode, message: String) -> Self {
-        Self { exit_code, message }
+    pub fn new(exit_code: ExitCode, message: impl Into<String>) -> Self {
+        Self {
+            exit_code,
+            message: message.into()
+        }
     }
 
     pub fn exit_code(&self) -> &ExitCode {

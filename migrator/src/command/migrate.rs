@@ -53,17 +53,9 @@ impl Migrate {
                     anyhow!(format!("Failed user migration data. Error: {}", error))
                 })?;
 
-                Ok(Output::new(
-                    ExitCode::Succeed,
-                    "All migrate succeed.".to_string(),
-                ))
+                Ok(Output::new(ExitCode::Succeed, "All migrate succeed."))
             },
-            MigrateType::Down => {
-                Ok(Output::new(
-                    ExitCode::Succeed,
-                    "Migrate down succeed.".to_string(),
-                ))
-            }
+            MigrateType::Down => Ok(Output::new(ExitCode::Succeed, "Migrate down succeed."))
         }
     }
 
@@ -90,8 +82,6 @@ impl Migrate {
                 std::fs::File::open(&migration_file).context("Cannot read migration file.")?;
 
             let query = Parser::from_json_file::<CreateTableQuery>(&data)?;
-
-            dbg!(&query);
 
             if ExistsTableResultType::NotFound
                 == self.client

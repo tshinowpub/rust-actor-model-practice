@@ -34,18 +34,22 @@ impl Reset {
         }
         println!("--------------------------------------");
 
-        Ok(Output::new(
-            ExitCode::Succeed,
-            "Remove table was succeeded.".to_string(),
-        ))
+        Ok(Output::new(ExitCode::Succeed, "Remove all table was succeeded."))
     }
 
     async fn find_table_names(&self) -> Result<Vec<String>> {
-        let result = self.client.list_tables(&ListTablesQuery::default()).await;
+        let result = self
+            .client
+            .list_tables(&ListTablesQuery::default())
+            .await;
 
         let table_names = result.map(|output|
-                //@todo When there are more than 100 tables.
-                output.table_names().unwrap_or(&[]).to_vec())?;
+            //@todo When there are more than 100 tables.
+            output
+                .table_names()
+                .unwrap_or(&[])
+                .to_vec()
+        )?;
 
         Ok(table_names)
     }
