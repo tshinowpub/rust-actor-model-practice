@@ -16,17 +16,18 @@ use crate::command::migrate_operation_type::MigrateOperationType;
 use crate::command::migrate_type::MigrateType;
 use crate::command::{ExitCode, Output};
 use crate::parser::Parser;
-use crate::settings::Settings;
 
 const RESOURCE_FILE_DIR: &str = "resource";
 const DEFAULT_MIGRATION_FILE_PATH: &str = "migrations";
 
-#[derive(Debug, Copy, Clone)]
-pub struct Migrate {}
+#[derive(Debug, Clone)]
+pub struct Migrate {
+    client: Client
+}
 
 impl Migrate {
-    pub fn new() -> Self {
-        Self {}
+    pub fn new(client: Client) -> Self {
+        Self { client }
     }
 
     pub async fn execute(
@@ -34,8 +35,6 @@ impl Migrate {
         command: &MigrateType,
         migrate_path: Option<&PathBuf>,
     ) -> anyhow::Result<Output> {
-        let _ = Settings::new().map_err(|error| anyhow!(error))?;
-
         match command.to_owned() {
             MigrateType::Up => {
                 self.create_migration_table_for_dynamodb()
@@ -82,7 +81,7 @@ impl Migrate {
         Ok(migration_files)
     }
 
-    async fn create_migration_table_for_dynamodb(self) -> anyhow::Result<()> {
+    async fn create_migration_table_for_dynamodb(&self) -> anyhow::Result<()> {
         for migration_file in self
             .read_migration_files(self.migration_dir()?)
             .context("")?
@@ -95,12 +94,12 @@ impl Migrate {
             dbg!(&query);
 
             if ExistsTableResultType::NotFound
-                == Client::new()
+                == self.client
                     .exists_table(query.table_name())
                     .await
                     .context("Cannot check exists table.")?
             {
-                Client::new()
+                self.client
                     .create_table(query.table_name(), &query)
                     .await
                     .context("Cannot create table.")?;
@@ -110,7 +109,7 @@ impl Migrate {
         Ok(())
     }
 
-    async fn migrate(self, target_path: PathBuf) -> anyhow::Result<()> {
+    async fn migrate(&self, target_path: PathBuf) -> anyhow::Result<()> {
         let files = self
             .read_migration_files(target_path)
             .context("Cannot read migration file.")?;
@@ -132,7 +131,7 @@ impl Migrate {
 
             println!("Running file name {}", &file_name);
 
-            match (Client::new().get_item(&query).await?.item(), operation_type) {
+            match (self.client.get_item(&query).await?.item(), operation_type) {
                 (Some(_), _) => {
                     println!(
                         "File name {} was already executed. This file was skipped.",
@@ -147,7 +146,7 @@ impl Migrate {
 
                     let query = Parser::from_json_file::<CreateTableQuery>(&data)?;
 
-                    Client::new()
+                    self.client
                         .create_table(query.table_name(), &query)
                         .await?;
                     self.add_migration_record(&file).await?;
@@ -160,7 +159,7 @@ impl Migrate {
 
                     let query = Parser::from_json_file::<DeleteTableQuery>(&data)?;
 
-                    Client::new()
+                    self.client
                         .delete_table(&query)
                         .await
                         .context("Cannot delete table. {}")?;
@@ -175,15 +174,17 @@ impl Migrate {
         Ok(())
     }
 
-    fn migration_dir(self) -> anyhow::Result<PathBuf> {
-        Ok(env::current_dir()
+    fn migration_dir(&self) -> anyhow::Result<PathBuf> {
+        let aaa = env::current_dir()
             .context("Cannot find current_dir.")?
             .join("src")
-            .join(RESOURCE_FILE_DIR))
+            .join(RESOURCE_FILE_DIR);
+
+        Ok(aaa)
     }
 
     fn migrate_path_resolver(
-        self,
+        &self,
     ) -> fn(migrate_path: Option<&PathBuf>, default: PathBuf) -> PathBuf {
         |migrate_path, default| match migrate_path {
             Some(path) => path.to_path_buf(),
@@ -191,7 +192,7 @@ impl Migrate {
         }
     }
 
-    async fn add_migration_record(self, file: &PathBuf) -> anyhow::Result<PutItemOutput> {
+    async fn add_migration_record(&self, file: &PathBuf) -> anyhow::Result<PutItemOutput> {
         let file_name = AttributeValue::S(
             file.file_name()
                 .context(format!("Cannot get filename from PathBuf. {:?}", file))?
@@ -209,7 +210,7 @@ impl Migrate {
 
         let query = PutItemQuery::new("migrations".to_string(), items, None, None::<String>);
 
-        let response = Client::new()
+        let response = self.client
             .put_item(query)
             .await
             .context("Failed put item.")?;

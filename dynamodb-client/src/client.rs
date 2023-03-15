@@ -29,16 +29,10 @@ pub struct Client {
     client: aws_sdk_dynamodb::Client,
 }
 
-impl Default for Client {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 impl Client {
-    pub fn new() -> Client {
+    pub fn new(uri: Uri) -> Client {
         Self {
-            client: Client::factory(),
+            client: Client::factory(uri),
         }
     }
 
@@ -179,8 +173,8 @@ impl Client {
         }
     }
 
-    fn factory() -> aws_sdk_dynamodb::Client {
-        let endpoint = Endpoint::immutable(Uri::from_static("http://localhost:4566"));
+    fn factory(uri: Uri) -> aws_sdk_dynamodb::Client {
+        let endpoint = Endpoint::immutable(uri);
 
         let dynamodb_local_config = aws_sdk_dynamodb::Config::builder()
             .region(Region::new("ap-northeast-1"))
@@ -202,6 +196,8 @@ mod tests {
     use crate::client::{Client, ExistsTableResultType};
     use crate::query::get_item::{GetItemQuery, Key};
     use crate::query::put_item::{Items, PutItemQuery};
+
+    const DYNAMODB_HOST: &str = "http://localhost:4566";
 
     #[tokio::test]
     async fn test_put_item() -> anyhow::Result<()> {
@@ -234,7 +230,7 @@ mod tests {
             None::<String>
         );
 
-        let client = Client::new();
+        let client = Client::new(self::DYNAMODB_HOST);
 
         client
             .put_item(query)
@@ -263,7 +259,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_exists_table() {
-        let exists_table_result_type = Client::new()
+        let exists_table_result_type = Client::new(self::DYNAMODB_HOST)
             .exists_table("migrations")
             .await
             .unwrap();
@@ -273,7 +269,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_exists_table_not_found() {
-        let exists_table_result_type = Client::new()
+        let exists_table_result_type = Client::new(self::DYNAMODB_HOST)
             .exists_table("test")
             .await
             .unwrap();

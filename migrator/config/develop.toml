@@ -1,2 +1,4 @@
-[migration]
-driver = "dynamodb"
+[dynamodb]
+scheme = "http"
+host = "localhost"
+port = "4566"

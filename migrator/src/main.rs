@@ -1,12 +1,14 @@
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 use std::process::exit;
+use dynamodb_client::client::Client;
 
 use crate::command::list::List as ListCommand;
 use crate::command::migrate::Migrate as MigrateCommand;
 use crate::command::migrate_type::MigrateType;
 use crate::command::reset::Reset as ResetCommand;
+use crate::settings::Settings;
 
 mod command;
 mod parser;
@@ -46,9 +48,21 @@ async fn main() -> Result<()> {
         println!("Value for name: {}", name);
     }
 
+    let settings = Settings::new().map_err(|error| anyhow!(error))?;
+
+    if let Some(name) = cli.name.as_deref() {
+        println!("Value for name: {}", name);
+    }
+
+    let client = settings
+        .dynamodb()
+        .uri()
+        .map(|uri| Client::new(uri))
+        .unwrap();
+
     match &cli.command {
         Some(Commands::Migrate { command, path }) => {
-            let migrate = MigrateCommand::new();
+            let migrate = MigrateCommand::new(client);
 
             let result = migrate.execute(command, path.as_ref()).await;
 
@@ -76,7 +90,7 @@ async fn main() -> Result<()> {
         }
         Some(Commands::Create {}) => exit(0),
         Some(Commands::Reset {}) => {
-            let reset = ResetCommand::new();
+            let reset = ResetCommand::new(client);
 
             let result = reset.execute().await;
             match result {

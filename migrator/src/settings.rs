@@ -4,6 +4,7 @@ use serde::Deserialize;
 use std::env::VarError;
 use std::str::FromStr;
 use dotenvy::dotenv;
+use http::Uri;
 use thiserror::Error;
 
 #[derive(
@@ -31,9 +32,37 @@ pub enum Environment {
 pub struct Settings {
     #[allow(dead_code)]
     env: Environment,
+    #[allow(dead_code)]
+    log: Log,
+    #[allow(dead_code)]
+    dynamodb: DynamoDb
 }
 
-impl Settings {}
+#[derive(Debug, Deserialize, Clone)]
+pub struct Log {
+    #[allow(dead_code)]
+    level: String,
+}
+
+#[derive(Debug, Deserialize, Clone)]
+pub struct DynamoDb {
+    #[allow(dead_code)]
+    scheme: String,
+    #[allow(dead_code)]
+    host: String,
+    #[allow(dead_code)]
+    port: u16,
+}
+
+impl DynamoDb {
+    pub(crate) fn uri(&self) -> Result<Uri, http::Error> {
+        Uri::builder()
+            .scheme(self.scheme.as_str())
+            .authority(format!("{}:{}", self.host, self.port))
+            .path_and_query("/")
+            .build()
+    }
+}
 
 const CONFIG_FILE_PATH: &str = "./config/default.toml";
 const CONFIG_FILE_PREFIX: &str = "./config/";
@@ -64,8 +93,12 @@ impl Settings {
             ))
             .add_source(config::Environment::with_prefix("APP").separator("_"))
             .build()
-            .unwrap();
+            .expect("Cannot load config.");
 
         Ok(config.try_deserialize::<Settings>()?)
+    }
+
+    pub(crate) fn dynamodb(&self) -> &DynamoDb {
+        &self.dynamodb
     }
 }

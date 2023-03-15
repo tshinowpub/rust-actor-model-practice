@@ -6,12 +6,14 @@ use tokio_stream::StreamExt;
 
 use crate::command::{ExitCode, Output};
 
-#[derive(Debug, Copy, Clone)]
-pub struct Reset {}
+#[derive(Debug, Clone)]
+pub struct Reset {
+    client: Client
+}
 
 impl Reset {
-    pub fn new() -> Self {
-        Self {}
+    pub fn new(client: Client) -> Self {
+        Self { client }
     }
 
     pub async fn execute(self) -> Result<Output> {
@@ -38,8 +40,8 @@ impl Reset {
         ))
     }
 
-    async fn find_table_names(self) -> Result<Vec<String>> {
-        let result = Client::new().list_tables(&ListTablesQuery::default()).await;
+    async fn find_table_names(&self) -> Result<Vec<String>> {
+        let result = self.client.list_tables(&ListTablesQuery::default()).await;
 
         let table_names = result.map(|output|
                 //@todo When there are more than 100 tables.
@@ -48,10 +50,10 @@ impl Reset {
         Ok(table_names)
     }
 
-    async fn delete_table(self, table_name: &str) -> Result<()> {
+    async fn delete_table(&self, table_name: &str) -> Result<()> {
         let query = DeleteTableQuery::new(table_name);
 
-        Client::new().delete_table(&query).await?;
+        self.client.delete_table(&query).await?;
 
         Ok(())
     }
