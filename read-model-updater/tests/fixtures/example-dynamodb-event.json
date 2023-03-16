@@ -1,0 +1,45 @@
+{
+  "Records": [
+    {
+      "eventID": "c633d67d",
+      "eventName": "INSERT",
+      "eventVersion": "1.0",
+      "eventSource": "aws:dynamodb",
+      "awsRegion": "ap-northeast-1",
+      "dynamodb": {
+        "ApproximateCreationDateTime": 1480642020,
+        "Keys": {
+          "message_id": {
+            "S": "0b4eb05a-6d46-4326-96d6-bcaa4bc2035f"
+          }
+        },
+        "NewImage": {
+          "channel_id": {
+            "S": "1"
+          },
+          "message_id": {
+            "S": "0b4eb05a-6d46-4326-96d6-bcaa4bc2035f"
+          },
+          "message_type": {
+            "S": "post"
+          },
+          "posted_at": {
+            "S": "2023-03-15 23:57:35.353449500 UTC"
+          },
+          "message": {
+            "S": "テストテスト"
+          },
+          "account_id": {
+            "S": "111"
+          }
+        },
+        "OldImage": {
+        },
+        "SequenceNumber": "49638917533186157979722089949123779376369619237901172738",
+        "SizeBytes": 261,
+        "StreamViewType": "NEW_AND_OLD_IMAGES"
+      },
+      "eventSourceARN": "arn:aws:dynamodb:ap-northeast-1:000000000000:table/Messages/stream/2023-03-15T23:52:27.487"
+    }
+  ]
+}

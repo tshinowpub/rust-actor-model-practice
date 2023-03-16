@@ -1,3 +1,4 @@
+use aws_lambda_events::dynamodb::EventRecord;
 use aws_lambda_events::event::dynamodb::Event;
 use lambda_runtime::{run, service_fn, Error, LambdaEvent};
 use serde::{Deserialize, Serialize};
@@ -36,6 +37,14 @@ async fn function_handler(event: LambdaEvent<Event>) -> Result<(), Error> {
         body: "Hello World!".to_string(),
     };
 
+    dbg!("{}", &event);
+
+    let records = event
+        .payload
+        .records
+        .iter()
+        .for_each(|event_records| push_to_read_model(event_records));
+
     Ok(())
 }
 
@@ -50,4 +59,36 @@ async fn main() -> Result<(), Error> {
         .init();
 
     run(service_fn(function_handler)).await
+}
+
+fn push_to_read_model(record: &EventRecord) {
+    match record.event_name.as_str() {
+        "INSERT" => {
+            println!("Called Lambda event: {:?}.", record.event_name)
+        },
+        _ => {
+            println!("Called Lambda event: {:?}.", record.event_name)
+        },
+    };
+}
+
+#[cfg(test)]
+mod tests {
+    use std::process::exit;
+    use aws_lambda_events::dynamodb::Event;
+    use aws_lambda_events::serde_json;
+    use lambda_runtime::LambdaEvent;
+    use crate::push_to_read_model;
+
+    #[test]
+    fn test_function_push_to_read_model() {
+        let data = include_bytes!("../tests/fixtures/example-dynamodb-event.json");
+        let mut event: Event = serde_json::from_slice(data).expect("Cannot parse json.");
+
+        let event_record = event.records.pop().unwrap();
+
+        push_to_read_model(&event_record);
+
+        exit(0);
+    }
 }
