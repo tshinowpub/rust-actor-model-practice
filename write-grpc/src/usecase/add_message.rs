@@ -5,6 +5,7 @@ use chrono::Utc;
 use dynamodb_client::client::Client;
 use dynamodb_client::query::put_item::{Items, PutItemQuery};
 use std::collections::HashMap;
+use tonic::transport::Uri;
 use uuid::Uuid;
 
 use crate::adapter::controllers::add_message_controller::message::MessageRequest;
@@ -40,6 +41,6 @@ impl AddMessageUsecase {
 
         let query = PutItemQuery::new("Messages".to_string(), items, None, None::<String>);
 
-        Client::new().put_item(query).await
+        Client::new(Uri::from_static("http://localhost:4566/")).put_item(query).await
     }
 }
