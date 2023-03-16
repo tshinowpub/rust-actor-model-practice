@@ -165,12 +165,12 @@ impl Migrate {
     }
 
     fn migration_dir(&self) -> anyhow::Result<PathBuf> {
-        let aaa = env::current_dir()
+        let migration_dir = env::current_dir()
             .context("Cannot find current_dir.")?
             .join("src")
             .join(RESOURCE_FILE_DIR);
 
-        Ok(aaa)
+        Ok(migration_dir)
     }
 
     fn migrate_path_resolver(
