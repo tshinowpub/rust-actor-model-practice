@@ -18,5 +18,6 @@ members = [
     "read-model-updater",
     "write-grpc",
     "migrator",
-    "dynamodb-client"
+    "dynamodb-client",
+    "domain",
 ]

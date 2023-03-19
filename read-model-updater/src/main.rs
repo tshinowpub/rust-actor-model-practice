@@ -1,7 +1,14 @@
+use aws_lambda_events::dynamodb::attributes::AttributeValue;
 use aws_lambda_events::dynamodb::EventRecord;
 use aws_lambda_events::event::dynamodb::Event;
 use lambda_runtime::{run, service_fn, Error, LambdaEvent};
 use serde::{Deserialize, Serialize};
+use domain::model::message::message::Message;
+use domain::model::message::message_id::MessageId;
+use domain::model::message::message_repository::MessageRepository;
+use crate::message_repository_impl::MessageRepositoryImpl;
+
+mod message_repository_impl;
 
 /// This is a made-up example. Requests come into the runtime as unicode
 /// strings in json format, which can map to any structure that implements `serde::Deserialize`
@@ -32,7 +39,7 @@ struct Body {
 /// - https://github.com/aws-samples/serverless-rust-demo/
 async fn function_handler(event: LambdaEvent<Event>) -> Result<(), Error> {
     // Extract some useful information from the request
-    let resp = Response {
+    let _response = Response {
         statusCode: 200,
         body: "Hello World!".to_string(),
     };
@@ -64,6 +71,20 @@ async fn main() -> Result<(), Error> {
 fn push_to_read_model(record: &EventRecord) {
     match record.event_name.as_str() {
         "INSERT" => {
+            let message_id_value = record
+                .change.new_image
+                .get("message_id")
+                .map(|attribute_value| match attribute_value {
+                    AttributeValue::String(value) => value.to_string(),
+                    _ => panic!("{:?} was not supported.", attribute_value)
+                })
+                .expect("Message id not found.");
+
+            let message = Message::new(MessageId::new(message_id_value));
+
+            let message_repository = MessageRepositoryImpl::new();
+            message_repository.add(&message);
+
             println!("Called Lambda event: {:?}.", record.event_name)
         },
         _ => {
