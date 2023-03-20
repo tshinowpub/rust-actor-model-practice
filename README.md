@@ -14,6 +14,22 @@ Install protobuf so that you can compile Proto files according to your environme
 
 ## Usage
 
+### migration for RDB
+Migration uses [golang-migrate](https://github.com/golang-migrate/migrate).
+
+```shell
+$ docker run -v {{ migration dir }}:/migrations --network host migrate/migrate \
+    -path=/migrations/ -database mysql://{user}:{password}@localhost:3306/rust up
+    
+## Widows + Git Bash example
+// CLI
+migrate -source file://$(pwd -W)/resources/rds-reader/migrations -database "mysql://rust:rust@tcp(localhost:3306)/rust" up
+
+// Docker
+docker run -v $(pwd)/migrations:/migrations --network host migrate/migrate \
+  -path=/migrations/ -database "mysql://rust:rust@tcp(localhost:3306)/rust" up
+```
+
 ### read-http-api
 ```shell
 $ cd path/to/rust-actor-model-practice
