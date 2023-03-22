@@ -26,6 +26,8 @@ services:
       - mysql
     environment:
       PMA_HOSTS: mysql
+      PMA_USER: root
+      PMA_PASSWORD: root
 
   localstack:
     container_name: localstack
