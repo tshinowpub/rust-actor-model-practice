@@ -6,8 +6,13 @@ use serde::{Deserialize, Serialize};
 use domain::model::message::message::Message;
 use domain::model::message::message_id::MessageId;
 use domain::model::message::message_repository::MessageRepository;
+use sqlx::{Connection, MySqlConnection};
+use domain::model::message::account_id::AccountId;
+use crate::message_dto::MessageDto;
+
 use crate::message_repository_impl::MessageRepositoryImpl;
 
+mod message_dto;
 mod message_repository_impl;
 
 /// This is a made-up example. Requests come into the runtime as unicode
@@ -46,11 +51,15 @@ async fn function_handler(event: LambdaEvent<Event>) -> Result<(), Error> {
 
     dbg!("{}", &event);
 
-    let records = event
+    event
         .payload
         .records
         .iter()
-        .for_each(|event_records| push_to_read_model(event_records));
+        .for_each(|event_records| {
+            async {
+                let _ = push_to_read_model(event_records).await;
+            };
+        });
 
     Ok(())
 }
@@ -68,22 +77,25 @@ async fn main() -> Result<(), Error> {
     run(service_fn(function_handler)).await
 }
 
-fn push_to_read_model(record: &EventRecord) {
+async fn push_to_read_model(record: &EventRecord) -> anyhow::Result<()> {
+    let mut connection = MySqlConnection::connect("mysql://rust:rust@localhost/rust").await?;
+
     match record.event_name.as_str() {
         "INSERT" => {
-            let message_id_value = record
-                .change.new_image
-                .get("message_id")
-                .map(|attribute_value| match attribute_value {
-                    AttributeValue::String(value) => value.to_string(),
-                    _ => panic!("{:?} was not supported.", attribute_value)
-                })
-                .expect("Message id not found.");
+            let dto = MessageDto::from_event(record)?;
 
-            let message = Message::new(MessageId::new(message_id_value));
+            let query = r#"
+                INSERT INTO messages (message_write_id, account_id, channel_id, message, created_at, updated_at, deleted_at)
+                    VALUES (?, ?, ?, ?, NULL, NULL, NULL);
+            "#;
 
-            let message_repository = MessageRepositoryImpl::new();
-            message_repository.add(&message);
+            sqlx::query(query)
+                .bind(dto.message_write_id())
+                .bind(dto.account_id())
+                .bind(dto.channel_id())
+                .bind(dto.message())
+                .execute(&mut connection)
+                .await?;
 
             println!("Called Lambda event: {:?}.", record.event_name)
         },
@@ -91,25 +103,28 @@ fn push_to_read_model(record: &EventRecord) {
             println!("Called Lambda event: {:?}.", record.event_name)
         },
     };
+
+    Ok(())
 }
 
 #[cfg(test)]
 mod tests {
-    use std::process::exit;
     use aws_lambda_events::dynamodb::Event;
     use aws_lambda_events::serde_json;
     use lambda_runtime::LambdaEvent;
     use crate::push_to_read_model;
 
-    #[test]
-    fn test_function_push_to_read_model() {
+    #[tokio::test]
+    async fn test_function_push_to_read_model() {
         let data = include_bytes!("../tests/fixtures/example-dynamodb-event.json");
         let mut event: Event = serde_json::from_slice(data).expect("Cannot parse json.");
 
         let event_record = event.records.pop().unwrap();
 
-        push_to_read_model(&event_record);
+        let result = push_to_read_model(&event_record).await;
 
-        exit(0);
+        dbg!("{}", &result);
+
+        assert!(result.is_ok())
     }
 }

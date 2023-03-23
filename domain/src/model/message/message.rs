@@ -9,4 +9,8 @@ impl Message {
     pub fn new(message_id: MessageId) -> Self {
         Self { message_id }
     }
+
+    pub fn message_id(&self) -> &MessageId {
+        &self.message_id
+    }
 }

@@ -7,4 +7,8 @@ impl MessageId {
     pub fn new(value: impl Into<String>) -> Self {
         Self { value: value.into() }
     }
+
+    pub fn value(&self) -> &String {
+        &self.value
+    }
 }

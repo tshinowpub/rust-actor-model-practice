@@ -24,10 +24,13 @@ $ docker run -v {{ migration dir }}:/migrations --network host migrate/migrate \
 ## Widows + Git Bash example
 // CLI
 migrate -source file://$(pwd -W)/resources/rds-reader/migrations -database "mysql://rust:rust@tcp(localhost:3306)/rust" up
+migrate -source file://$(pwd -W)/resources/rds-reader/migrations -database "mysql://rust:rust@tcp(localhost:3306)/rust" down
 
 // Docker
 docker run -v $(pwd)/migrations:/migrations --network host migrate/migrate \
   -path=/migrations/ -database "mysql://rust:rust@tcp(localhost:3306)/rust" up
+docker run -v $(pwd)/migrations:/migrations --network host migrate/migrate \
+  -path=/migrations/ -database "mysql://rust:rust@tcp(localhost:3306)/rust" down
 ```
 
 ### read-http-api
