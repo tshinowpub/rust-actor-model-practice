@@ -1,19 +1,14 @@
-use aws_lambda_events::dynamodb::attributes::AttributeValue;
+#![allow(unused_imports)]
+
 use aws_lambda_events::dynamodb::EventRecord;
 use aws_lambda_events::event::dynamodb::Event;
 use lambda_runtime::{run, service_fn, Error, LambdaEvent};
 use serde::{Deserialize, Serialize};
-use domain::model::message::message::Message;
-use domain::model::message::message_id::MessageId;
-use domain::model::message::message_repository::MessageRepository;
 use sqlx::{Connection, MySqlConnection};
-use domain::model::message::account_id::AccountId;
+
 use crate::message_dto::MessageDto;
 
-use crate::message_repository_impl::MessageRepositoryImpl;
-
 mod message_dto;
-mod message_repository_impl;
 
 /// This is a made-up example. Requests come into the runtime as unicode
 /// strings in json format, which can map to any structure that implements `serde::Deserialize`
@@ -27,6 +22,7 @@ struct Request {
 /// to be serialized into json. The runtime pays no attention
 /// to the contents of the response payload.
 #[derive(Serialize)]
+#[allow(non_snake_case)]
 struct Response {
     statusCode: i32,
     body: String,
@@ -86,7 +82,7 @@ async fn push_to_read_model(record: &EventRecord) -> anyhow::Result<()> {
 
             let query = r#"
                 INSERT INTO messages (message_write_id, account_id, channel_id, message, created_at, updated_at, deleted_at)
-                    VALUES (?, ?, ?, ?, NULL, NULL, NULL);
+                    VALUES (?, ?, ?, ?, ?, NULL, NULL);
             "#;
 
             sqlx::query(query)
@@ -94,6 +90,15 @@ async fn push_to_read_model(record: &EventRecord) -> anyhow::Result<()> {
                 .bind(dto.account_id())
                 .bind(dto.channel_id())
                 .bind(dto.message())
+                .bind(
+                    dto
+                        .created_at()
+                        .map(|datetime| datetime
+                            .with_timezone(&chrono::Local)
+                            .format("%Y-%m-%d %H:%M:%S")
+                            .to_string()
+                        )
+                )
                 .execute(&mut connection)
                 .await?;
 
