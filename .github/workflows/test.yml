@@ -42,6 +42,7 @@ jobs:
 
       - name: Create DynamoDB table.
         run: |
+          cat .env
           cd migrator
           cargo run migrate up
 

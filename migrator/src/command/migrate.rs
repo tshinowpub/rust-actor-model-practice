@@ -83,6 +83,13 @@ impl Migrate {
 
             let query = Parser::from_json_file::<CreateTableQuery>(&data)?;
 
+            let result = self.client
+                .exists_table(query.table_name())
+                .await
+                .context("Cannot check exists table.");
+
+            dbg!(bbb);
+
             if ExistsTableResultType::NotFound
                 == self.client
                     .exists_table(query.table_name())
