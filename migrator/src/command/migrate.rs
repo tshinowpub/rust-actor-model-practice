@@ -106,8 +106,6 @@ impl Migrate {
 
         files.sort();
 
-        dbg!(&files);
-
         for file in files {
             let operation_type = MigrateOperationType::resolve(&file)?;
 
