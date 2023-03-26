@@ -88,7 +88,7 @@ impl Migrate {
                 .await
                 .context("Cannot check exists table.");
 
-            dbg!(bbb);
+            dbg!(result);
 
             if ExistsTableResultType::NotFound
                 == self.client
