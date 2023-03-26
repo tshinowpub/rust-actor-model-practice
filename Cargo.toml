@@ -12,7 +12,6 @@ tonic = "0.8.1"
 
 [workspace]
 members = [
-    "message",
     "web",
     "read-http-api",
     "read-model-updater",
