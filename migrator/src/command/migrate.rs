@@ -83,13 +83,6 @@ impl Migrate {
 
             let query = Parser::from_json_file::<CreateTableQuery>(&data)?;
 
-            let result = self.client
-                .exists_table(query.table_name())
-                .await
-                .context("Cannot check exists table.");
-
-            dbg!(result);
-
             if ExistsTableResultType::NotFound
                 == self.client
                     .exists_table(query.table_name())
@@ -156,10 +149,15 @@ impl Migrate {
 
                     let query = Parser::from_json_file::<DeleteTableQuery>(&data)?;
 
-                    self.client
+                    let delete_result = self.client
                         .delete_table(&query)
                         .await
-                        .context("Cannot delete table. {}")?;
+                        .context("Cannot delete table. {}");
+
+                    dbg!(&delete_result);
+
+                    delete_result?;
+
                     self.add_migration_record(&file).await?;
                 }
                 (_, _) => {
