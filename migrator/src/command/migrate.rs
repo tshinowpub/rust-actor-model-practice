@@ -100,9 +100,13 @@ impl Migrate {
     }
 
     async fn migrate(&self, target_path: PathBuf) -> anyhow::Result<()> {
-        let files = self
+        let mut files = self
             .read_migration_files(target_path)
             .context("Cannot read migration file.")?;
+
+        files.sort();
+
+        dbg!(&files);
 
         for file in files {
             let operation_type = MigrateOperationType::resolve(&file)?;

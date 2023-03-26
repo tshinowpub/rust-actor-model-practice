@@ -44,6 +44,7 @@ jobs:
         run: |
           cd migrator
           cat .env
+          ls -la migrations
           cargo run migrate up
 
       - name: Build & test
