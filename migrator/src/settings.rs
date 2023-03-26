@@ -26,6 +26,9 @@ pub enum Environment {
     #[serde(rename = "prod")]
     #[strum(serialize = "prod")]
     Prod,
+    #[serde(rename = "ci")]
+    #[strum(serialize = "ci")]
+    Ci,
 }
 
 #[derive(Debug, Deserialize, Clone)]
