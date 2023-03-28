@@ -1,4 +1,4 @@
-use crate::model::message::message_id::MessageId;
+use crate::message::model::message_id::MessageId;
 
 #[derive(Debug)]
 pub struct Message {

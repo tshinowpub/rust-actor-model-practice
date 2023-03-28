@@ -1,5 +1,5 @@
 use anyhow::Result;
-use crate::model::message::message::Message;
+use crate::message::model::message::Message;
 
 pub trait MessageRepository {
     fn add(&self, message: &Message) -> Result<()>;
