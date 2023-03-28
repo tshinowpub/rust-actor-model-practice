@@ -192,6 +192,7 @@ mod tests {
     use anyhow::Context;
     use aws_sdk_dynamodb::model::AttributeValue;
     use chrono::Utc;
+    use http::Uri;
     use uuid::Uuid;
     use crate::client::{Client, ExistsTableResultType};
     use crate::query::get_item::{GetItemQuery, Key};
@@ -230,7 +231,7 @@ mod tests {
             None::<String>
         );
 
-        let client = Client::new(self::DYNAMODB_HOST);
+        let client = Client::new(self::DYNAMODB_HOST.parse::<Uri>().unwrap());
 
         client
             .put_item(query)
@@ -259,7 +260,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_exists_table() {
-        let exists_table_result_type = Client::new(self::DYNAMODB_HOST)
+        let exists_table_result_type = Client::new(self::DYNAMODB_HOST.parse::<Uri>().unwrap())
             .exists_table("migrations")
             .await
             .unwrap();
@@ -269,7 +270,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_exists_table_not_found() {
-        let exists_table_result_type = Client::new(self::DYNAMODB_HOST)
+        let exists_table_result_type = Client::new(self::DYNAMODB_HOST.parse::<Uri>().unwrap())
             .exists_table("test")
             .await
             .unwrap();
