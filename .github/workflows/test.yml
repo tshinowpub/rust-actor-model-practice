@@ -47,6 +47,14 @@ jobs:
           ls -la migrations
           cargo run migrate up
 
+      - name: Create MySQL table.
+        run: |
+          curl -L https://packagecloud.io/golang-migrate/migrate/gpgkey | apt-key add -
+          echo "deb https://packagecloud.io/golang-migrate/migrate/ubuntu/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/migrate.list
+          apt-get update
+          apt-get install -y migrate
+          migrate -source file://resources/rds-reader/migrations -database mysql://rust:rust@tcp(localhost:3306)/rust/database up
+
       - name: Build & test
         env:
           RUST_VERSION: ${{ matrix.rust }}
