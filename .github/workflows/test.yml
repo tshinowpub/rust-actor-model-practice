@@ -14,7 +14,7 @@ jobs:
           - read-model-updater
           - dynamodb-client
 
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
 
     steps:
       - name: checkout
@@ -44,7 +44,7 @@ jobs:
         run: |
           ls -la
           curl -L https://packagecloud.io/golang-migrate/migrate/gpgkey | sudo apt-key add -
-          sudo echo "deb https://packagecloud.io/golang-migrate/migrate/ubuntu/ $(lsb_release -sc) main" | sudo tee /etc/apt/sources.list.d/migrate.list
+          echo "deb https://packagecloud.io/golang-migrate/migrate/ubuntu/ $(lsb_release -sc) main" | sudo tee /etc/apt/sources.list.d/migrate.list
           sudo apt-get update
           sudo apt-get install -y migrate
           migrate -source file://resources/rds-reader/migrations -database mysql://rust:rust@tcp(localhost:3306)/rust/database up
