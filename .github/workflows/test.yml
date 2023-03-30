@@ -41,13 +41,13 @@ jobs:
           mv migrator/.env.ci migrator/.env
 
       - name: Create MySQL table.
-          run: |
-            ls -la
-            curl -L https://packagecloud.io/golang-migrate/migrate/gpgkey | sudo apt-key add -
-            echo "deb https://packagecloud.io/golang-migrate/migrate/ubuntu/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/migrate.list
-            apt-get update
-            apt-get install -y migrate
-            migrate -source file://resources/rds-reader/migrations -database mysql://rust:rust@tcp(localhost:3306)/rust/database up
+        run: |
+          ls -la
+          curl -L https://packagecloud.io/golang-migrate/migrate/gpgkey | sudo apt-key add -
+          sudo echo "deb https://packagecloud.io/golang-migrate/migrate/ubuntu/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/migrate.list
+          sudo apt-get update
+          sudo apt-get install -y migrate
+          migrate -source file://resources/rds-reader/migrations -database mysql://rust:rust@tcp(localhost:3306)/rust/database up
 
       - name: Create DynamoDB table.
         run: |
@@ -55,6 +55,7 @@ jobs:
           cat .env
           ls -la migrations
           cargo run migrate up
+
 
       - name: Build & test
         env:
