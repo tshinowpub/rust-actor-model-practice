@@ -5,6 +5,7 @@ use aws_lambda_events::event::dynamodb::Event;
 use lambda_runtime::{run, service_fn, Error, LambdaEvent};
 use serde::{Deserialize, Serialize};
 use sqlx::{Connection, MySqlConnection};
+use tokio_stream::StreamExt;
 
 use crate::message_dto::MessageDto;
 
@@ -47,15 +48,11 @@ async fn function_handler(event: LambdaEvent<Event>) -> Result<(), Error> {
 
     dbg!("{}", &event);
 
-    event
-        .payload
-        .records
-        .iter()
-        .for_each(|event_records| {
-            async {
-                let _ = push_to_read_model(event_records).await;
-            };
-        });
+    let mut stream = tokio_stream::iter(event.payload.records.iter());
+    while let Some(item) = stream.next().await {
+        // 非同期処理を行う
+        let _ = push_to_read_model(item).await;
+    }
 
     Ok(())
 }
@@ -74,7 +71,7 @@ async fn main() -> Result<(), Error> {
 }
 
 async fn push_to_read_model(record: &EventRecord) -> anyhow::Result<()> {
-    let mut connection = MySqlConnection::connect("mysql://rust:rust@localhost/rust").await?;
+    let mut connection = MySqlConnection::connect("mysql://rust:rust@localhost:3306/rust").await?;
 
     match record.event_name.as_str() {
         "INSERT" => {
