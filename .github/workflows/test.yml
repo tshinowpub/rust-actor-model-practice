@@ -46,7 +46,7 @@ jobs:
           sudo sh -c "echo deb https://packagecloud.io/golang-migrate/migrate/ubuntu/ $(lsb_release -sc) main > /etc/apt/sources.list.d/migrate.list"
           sudo apt-get update
           sudo apt-get install -y migrate
-          migrate -source file://$(pwd)/resources/rds-reader/migrations -database "mysql://rust:rust@tcp(localhost:3306)/rust/database" up
+          migrate -source file://$(pwd)/resources/rds-reader/migrations -database "mysql://rust:rust@tcp(localhost:3306)/rust" up
 
       - name: Create DynamoDB table.
         run: |
