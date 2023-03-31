@@ -48,7 +48,6 @@ jobs:
           cat /etc/apt/sources.list.d/migrate.list"
           sudo apt-get update
           sudo apt-get install -y migrate
-          migrate -source file://resources/rds-reader/migrations -database mysql://rust:rust@tcp(localhost:3306)/rust/database up
 
       - name: Create DynamoDB table.
         run: |
