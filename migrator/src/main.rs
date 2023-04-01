@@ -53,7 +53,7 @@ async fn main() -> Result<()> {
     let client = settings
         .dynamodb()
         .uri()
-        .map(|uri| Client::new(uri))
+        .map(Client::new)
         .unwrap();
 
     match &cli.command {
