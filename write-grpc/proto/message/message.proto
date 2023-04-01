@@ -7,10 +7,16 @@ service Message {
 }
 
 message MessageRequest {
-  string channel_id= 1;
-  string message = 2;
+  string channel_id = 1;
+  string account_id = 2;
+  string message = 3;
 }
 
 message MessageReply {
-  string message = 1;
+  string message_id = 1;
+  string channel_id = 2;
+  string account_id = 3;
+  string message = 4;
+  string message_type = 5;
+  string posted_at = 6;
 }

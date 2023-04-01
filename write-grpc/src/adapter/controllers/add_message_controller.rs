@@ -30,7 +30,7 @@ impl Message for AddMessage {
 
         let output = self
             .usecase
-            .run(message_request.clone())
+            .run(&message_request)
             .await
             .map_err(|error| {
                 Status::new(
@@ -42,10 +42,13 @@ impl Message for AddMessage {
         dbg!(&output);
 
         let reply = message::MessageReply {
-            message: format!("channel_id: {}", &message_request.channel_id),
+            message_id: String::from("1"),
+            channel_id: String::from("2"),
+            account_id: String::from("3"),
+            message: String::from("4"),
+            message_type: String::from("5"),
+            posted_at: String::from("6")
         };
-
-        dbg!(&reply);
 
         Ok(Response::new(reply))
     }

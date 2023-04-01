@@ -9,6 +9,7 @@ Use postman.
 ```json
 {
     "channel_id": "1",
+    "account_id": "11111",
     "message": "hogesshoge"
 }
 ```
